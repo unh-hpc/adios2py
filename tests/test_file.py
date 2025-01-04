@@ -4,12 +4,19 @@ import os
 
 import adios2.bindings as ab  # type: ignore[import-untyped]
 import numpy as np
+import pytest
 
 
-def test_write_file(tmp_path):
+@pytest.fixture
+def test1_file(tmp_path):
+    """Creates a simple adios2 test1.bp
+
+    with an int and an array of floats"""
+
+    filename = tmp_path / "test1.bp"
     ad = ab.ADIOS()
     io = ad.DeclareIO("io-test1")
-    engine = io.Open(os.fspath(tmp_path / "test1.bp"), ab.Mode.Write)
+    engine = io.Open(os.fspath(filename), ab.Mode.Write)
 
     test_int = np.array(99)
     var = io.DefineVariable("test_int", test_int)
@@ -22,3 +29,13 @@ def test_write_file(tmp_path):
     engine.Put(var, test_floats, launch=ab.Mode.Sync)
 
     engine.Close()
+
+    return filename
+
+
+def test_write_test1_file(test1_file):
+    """Checks that test1_file is properly written.
+
+    And at the same time, that it can be read using the low-level API.
+    """
+    assert test1_file
