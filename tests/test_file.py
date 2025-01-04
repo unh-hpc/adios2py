@@ -7,6 +7,8 @@ import adios2.bindings as ab  # type: ignore[import-untyped]
 import numpy as np
 import pytest
 
+import adios2py
+
 sample_data = {
     "test_int_0d": np.array(99),
     "test_float_1d": np.arange(5.0),
@@ -128,3 +130,7 @@ def test_write_test1_file(test1_file):
     """
     assert test1_file
     check_test1_file_lowlevel(test1_file)
+
+
+def test_File_open(test1_file):
+    adios2py.File(test1_file)
