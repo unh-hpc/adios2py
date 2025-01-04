@@ -7,33 +7,25 @@ import adios2.bindings as ab  # type: ignore[import-untyped]
 import numpy as np
 import pytest
 
+sample_data = {
+    "test_int": np.array(99),
+    "test_floats": np.arange(5.0),
+    "test_char2d": np.arange(12, dtype="int8").reshape(3, 4),
+}
+
 
 @pytest.fixture
 def test1_file(tmp_path):
-    """Creates a simple adios2 test1.bp
-
-    with an int and an array of floats"""
+    """Fixture returning the filename of a simple adios2 test file containing sample_data."""
 
     filename = tmp_path / "test1.bp"
     ad = ab.ADIOS()
     io = ad.DeclareIO("io-test1")
     engine = io.Open(os.fspath(filename), ab.Mode.Write)
 
-    test_int = np.array(99)
-    var = io.DefineVariable("test_int", test_int)
-    engine.Put(var, test_int, launch=ab.Mode.Sync)
-
-    test_floats = np.asarray(np.arange(5.0))
-    var = io.DefineVariable(
-        "test_floats", test_floats, test_floats.shape, [0], test_floats.shape
-    )
-    engine.Put(var, test_floats, launch=ab.Mode.Sync)
-
-    test_char2d = np.asarray(np.arange(12), dtype="int8").reshape(3, 4)
-    var = io.DefineVariable(
-        "test_char2d", test_char2d, test_char2d.shape, [0, 0], test_char2d.shape
-    )
-    engine.Put(var, test_char2d, launch=ab.Mode.Sync)
+    for name, data in sample_data.items():
+        var = io.DefineVariable(name, data, data.shape, [0] * data.ndim, data.shape)
+        engine.Put(var, np.asarray(data), ab.Mode.Sync)
 
     engine.Close()
 
