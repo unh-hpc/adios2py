@@ -64,8 +64,8 @@ def check_test1_file_lowlevel(filename: os.PathLike[Any] | str) -> None:
 
 def check_test1_file(filename: os.PathLike[Any] | str) -> None:
     file = adios2py.File(filename)
-    io = file._io
-    engine = file._engine
+    io = file.io
+    engine = file.engine
 
     for name, ref_data in sample_data.items():
         var = io.InquireVariable(name)

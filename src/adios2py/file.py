@@ -22,6 +22,18 @@ class File:
         """Returns True if the file is open."""
         return self._engine is not None and self._io is not None
 
+    @property
+    def io(self) -> adios2bindings.IO:
+        """Returns the underlying IO object."""
+        assert self  # is_open
+        return self._io
+
+    @property
+    def engine(self) -> adios2bindings.Engine:
+        """Returns the underlying Engine object."""
+        assert self  # is_open
+        return self._engine
+
 
 _mode_to_adios2 = {
     "r": adios2bindings.Mode.Read,
