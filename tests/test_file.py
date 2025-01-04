@@ -55,18 +55,11 @@ def check_test1_file_lowlevel(filename: os.PathLike[Any] | str) -> None:
 
 def check_test1_file(filename: os.PathLike[Any] | str) -> None:
     file = adios2py.File(filename)
-    io = file.io
-    engine = file.engine
 
     for name, ref_data in sample_data.items():
-        var = io.InquireVariable(name)
-        assert var
-        dtype = adios2py.util.adios2_to_dtype(var.Type())
-        assert dtype == ref_data.dtype
-        shape = tuple(var.Shape())
-        assert shape == ref_data.shape
-        data = np.empty(shape, dtype=dtype)
-        engine.Get(var, data, ab.Mode.Sync)
+        data = file.read(name)
+        assert data.dtype == ref_data.dtype
+        assert data.shape == ref_data.shape
         assert np.all(data == ref_data)
 
 

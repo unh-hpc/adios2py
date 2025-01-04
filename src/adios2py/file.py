@@ -4,6 +4,7 @@ import os
 from typing import Any
 
 import adios2.bindings as adios2bindings  # type: ignore[import-untyped]
+import numpy as np
 
 from adios2py import util
 
@@ -54,3 +55,15 @@ class File:
         """Close the file when the object is deleted."""
         if self:
             self.close()
+
+    def read(self, name: str) -> np.ndarray[Any, Any]:
+        """Read a variable from the file."""
+        var = self.io.InquireVariable(name)
+        if not var:
+            msg = f"Variable '{name}' not found"
+            raise ValueError(msg)
+        dtype = util.adios2_to_dtype(var.Type())
+        shape = tuple(var.Shape())
+        data = np.empty(shape, dtype=dtype)
+        self.engine.Get(var, data, adios2bindings.Mode.Sync)
+        return data
