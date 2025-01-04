@@ -1,0 +1,12 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: 2024.08.19
+_src_path: gh:scientific-python/cookie
+backend: setuptools621
+email: kai.germaschewski@unh.edu
+full_name: Kai Germaschewski
+license: Apache
+org: unh-hpc
+project_name: adios2py
+project_short_description: A pythonic interface to the ADIOS2 I/O library
+url: https://github.com/unh-hpc/adios2py
+vcs: true
