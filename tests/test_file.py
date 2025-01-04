@@ -86,6 +86,26 @@ def test_adios2_1(tmp_path):
     assert "99" in str(proc.stdout)
 
 
+@pytest.mark.xfail
+def test_adios2_2(tmp_path):
+    filename = tmp_path / "test.bp"
+    ad = ab.ADIOS()
+    io = ad.DeclareIO("io-test1")
+    engine = io.Open(os.fspath(filename), ab.Mode.Write)
+    data = np.array(99, dtype=np.uint8)
+    var = io.DefineVariable("test", data, data.shape, [0] * data.ndim, data.shape)
+    engine.Put(var, np.asarray(data), ab.Mode.Sync)
+    engine.Close()
+
+    import subprocess
+
+    proc = subprocess.run(
+        ["bpls", "-dt", filename], capture_output=True, text=True, check=False
+    )
+    assert proc.returncode == 0
+    assert "char" in str(proc.stdout)
+
+
 def test_write_test1_file(test1_file):
     """Checks that test1_file is properly written.
 
