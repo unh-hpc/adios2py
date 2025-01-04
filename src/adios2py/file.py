@@ -45,6 +45,11 @@ class File:
         self._engine = None
         self._io = None
 
+    def __del__(self) -> None:
+        """Close the file when the object is deleted."""
+        if self:
+            self.close()
+
 
 _mode_to_adios2 = {
     "r": adios2bindings.Mode.Read,
