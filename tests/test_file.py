@@ -8,9 +8,9 @@ import numpy as np
 import pytest
 
 sample_data = {
-    "test_int": np.array(99),
-    "test_floats": np.arange(5.0),
-    "test_char2d": np.arange(12, dtype="int8").reshape(3, 4),
+    "test_int_0d": np.array(99),
+    "test_float_1d": np.arange(5.0),
+    "test_int8_2d": np.arange(12, dtype="int8").reshape(3, 4),
 }
 
 
