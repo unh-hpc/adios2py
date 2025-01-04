@@ -22,7 +22,7 @@ def test1_file(tmp_path):
     var = io.DefineVariable("test_int", test_int)
     engine.Put(var, test_int, launch=ab.Mode.Sync)
 
-    test_floats = np.asarray(np.arange(5))
+    test_floats = np.asarray(np.arange(5.0))
     var = io.DefineVariable(
         "test_floats", test_floats, test_floats.shape, [0], test_floats.shape
     )
