@@ -11,6 +11,7 @@ sample_data = {
     "test_int_0d": np.array(99),
     "test_float_1d": np.arange(5.0),
     "test_int8_2d": np.arange(12, dtype="int8").reshape(3, 4),
+    "test_uint8_1d": np.arange(4, dtype="uint8"),
 }
 
 
@@ -33,7 +34,9 @@ def test1_file(tmp_path):
 
 
 def _adios2_to_dtype(type_str: str) -> np.dtype[Any]:
-    if type_str.endswith("_t"):
+    if type_str == "char":
+        type_str = "int8" if ab.is_char_signed else "uint8"
+    elif type_str.endswith("_t"):
         type_str = type_str[:-2]
 
     return np.dtype(type_str)
