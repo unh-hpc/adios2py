@@ -62,6 +62,23 @@ def check_test1_file_lowlevel(filename: os.PathLike[Any] | str) -> None:
         assert np.all(data == ref_data)
 
 
+def check_test1_file(filename: os.PathLike[Any] | str) -> None:
+    file = adios2py.File(filename)
+    io = file._io
+    engine = file._engine
+
+    for name, ref_data in sample_data.items():
+        var = io.InquireVariable(name)
+        assert var
+        dtype = _adios2_to_dtype(var.Type())
+        assert dtype == ref_data.dtype
+        shape = tuple(var.Shape())
+        assert shape == ref_data.shape
+        data = np.empty(shape, dtype=dtype)
+        engine.Get(var, data, ab.Mode.Sync)
+        assert np.all(data == ref_data)
+
+
 @pytest.mark.xfail
 def test_adios2_1(tmp_path):
     filename = tmp_path / "test.bp"
@@ -134,3 +151,8 @@ def test_write_test1_file(test1_file):
 
 def test_File_open(test1_file):
     adios2py.File(test1_file)
+
+
+def test_check_test1_file(test1_file):
+    """Checks reading using the adios2py API."""
+    check_test1_file(test1_file)
