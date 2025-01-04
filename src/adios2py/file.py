@@ -5,6 +5,8 @@ from typing import Any
 
 import adios2.bindings as adios2bindings  # type: ignore[import-untyped]
 
+from adios2py import util
+
 
 class File:
     """
@@ -17,7 +19,7 @@ class File:
         self._adios = adios2bindings.ADIOS()
         self._io_name = "io-adios2py"
         self._io = self._adios.DeclareIO(self._io_name)
-        self._engine = self._io.Open(os.fspath(filename), _mode_to_adios2[mode])
+        self._engine = self._io.Open(os.fspath(filename), util.openmode_to_adios2(mode))
 
     def __bool__(self) -> bool:
         """Returns True if the file is open."""
@@ -49,10 +51,3 @@ class File:
         """Close the file when the object is deleted."""
         if self:
             self.close()
-
-
-_mode_to_adios2 = {
-    "r": adios2bindings.Mode.Read,
-    "rra": adios2bindings.Mode.ReadRandomAccess,
-    "w": adios2bindings.Mode.Write,
-}

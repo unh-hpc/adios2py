@@ -13,3 +13,14 @@ def adios2_to_dtype(type_str: str) -> np.dtype[Any]:
         type_str = type_str[:-2]
 
     return np.dtype(type_str)
+
+
+_mode_to_adios2 = {
+    "r": adios2bindings.Mode.Read,
+    "rra": adios2bindings.Mode.ReadRandomAccess,
+    "w": adios2bindings.Mode.Write,
+}
+
+
+def openmode_to_adios2(mode: str) -> adios2bindings.Mode:
+    return _mode_to_adios2[mode]
