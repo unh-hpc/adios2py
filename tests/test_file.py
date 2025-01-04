@@ -29,6 +29,12 @@ def test1_file(tmp_path):
     )
     engine.Put(var, test_floats, launch=ab.Mode.Sync)
 
+    test_char2d = np.asarray(np.arange(12), dtype="int8").reshape(3, 4)
+    var = io.DefineVariable(
+        "test_char2d", test_char2d, test_char2d.shape, [0, 0], test_char2d.shape
+    )
+    engine.Put(var, test_char2d, launch=ab.Mode.Sync)
+
     engine.Close()
 
     return filename
@@ -72,6 +78,19 @@ def check_test1_file_lowlevel(filename: os.PathLike[Any] | str) -> None:
     test_floats = np.empty(shape, dtype=dtype)
     engine.Get(var, test_floats)
     assert np.all(test_floats == np.arange(5.0))
+
+    var = io.InquireVariable("test_char2d")
+    assert var
+    dtype = _adios2_to_dtype(var.Type())
+    assert dtype == np.int8
+    size = var.Count()
+    assert size == [3, 4]
+    shape = var.Shape()
+    assert shape == [3, 4]
+    shape = tuple(shape)
+    test_char2d = np.empty(shape, dtype=dtype)
+    engine.Get(var, test_char2d)
+    assert np.all(test_char2d == np.arange(12).reshape(3, 4))
 
 
 def test_write_test1_file(test1_file):
