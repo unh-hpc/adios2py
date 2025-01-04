@@ -31,7 +31,7 @@ dependencies = ["adios2"]
 
 [project.optional-dependencies]
 test = ["pytest >=6", "pytest-cov >=3"]
-dev = ["pytest >=6", "pytest-cov >=3", "pre-commit", "nox"]
+dev = ["pytest >=6", "pytest-cov >=3", "pre-commit", "nox", "mypy"]
 docs = [
   "sphinx>=7.0",
   "myst_parser>=0.13",
@@ -66,7 +66,7 @@ report.exclude_also = ['\.\.\.', 'if typing.TYPE_CHECKING:']
 
 [tool.mypy]
 files = ["src", "tests"]
-python_version = "3.8"
+python_version = "3.10"
 warn_unused_configs = true
 strict = true
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
