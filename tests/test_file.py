@@ -63,7 +63,7 @@ def check_test1_file_lowlevel(filename: os.PathLike[Any] | str) -> None:
     assert shape == []
     shape = tuple(shape)
     test_int = np.empty(shape, dtype=dtype)
-    engine.Get(var, test_int)
+    engine.Get(var, test_int, ab.Mode.Sync)
     assert test_int == 99
 
     var = io.InquireVariable("test_floats")
@@ -76,7 +76,7 @@ def check_test1_file_lowlevel(filename: os.PathLike[Any] | str) -> None:
     assert shape == [5]
     shape = tuple(shape)
     test_floats = np.empty(shape, dtype=dtype)
-    engine.Get(var, test_floats)
+    engine.Get(var, test_floats, ab.Mode.Sync)
     assert np.all(test_floats == np.arange(5.0))
 
     var = io.InquireVariable("test_char2d")
@@ -89,7 +89,7 @@ def check_test1_file_lowlevel(filename: os.PathLike[Any] | str) -> None:
     assert shape == [3, 4]
     shape = tuple(shape)
     test_char2d = np.empty(shape, dtype=dtype)
-    engine.Get(var, test_char2d)
+    engine.Get(var, test_char2d, ab.Mode.Sync)
     assert np.all(test_char2d == np.arange(12).reshape(3, 4))
 
 
