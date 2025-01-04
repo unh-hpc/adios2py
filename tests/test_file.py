@@ -45,44 +45,16 @@ def check_test1_file_lowlevel(filename: os.PathLike[Any] | str) -> None:
     engine = io.Open(os.fspath(filename), ab.Mode.ReadRandomAccess)
     assert engine
 
-    var = io.InquireVariable("test_int")
-    assert var
-    dtype = _adios2_to_dtype(var.Type())
-    assert dtype == np.int64
-    size = var.Count()
-    assert size == []
-    shape = var.Shape()
-    assert shape == []
-    shape = tuple(shape)
-    test_int = np.empty(shape, dtype=dtype)
-    engine.Get(var, test_int, ab.Mode.Sync)
-    assert test_int == 99
-
-    var = io.InquireVariable("test_floats")
-    assert var
-    dtype = _adios2_to_dtype(var.Type())
-    assert dtype == np.float64
-    size = var.Count()
-    assert size == [5]
-    shape = var.Shape()
-    assert shape == [5]
-    shape = tuple(shape)
-    test_floats = np.empty(shape, dtype=dtype)
-    engine.Get(var, test_floats, ab.Mode.Sync)
-    assert np.all(test_floats == np.arange(5.0))
-
-    var = io.InquireVariable("test_char2d")
-    assert var
-    dtype = _adios2_to_dtype(var.Type())
-    assert dtype == np.int8
-    size = var.Count()
-    assert size == [3, 4]
-    shape = var.Shape()
-    assert shape == [3, 4]
-    shape = tuple(shape)
-    test_char2d = np.empty(shape, dtype=dtype)
-    engine.Get(var, test_char2d, ab.Mode.Sync)
-    assert np.all(test_char2d == np.arange(12).reshape(3, 4))
+    for name, ref_data in sample_data.items():
+        var = io.InquireVariable(name)
+        assert var
+        dtype = _adios2_to_dtype(var.Type())
+        assert dtype == ref_data.dtype
+        shape = tuple(var.Shape())
+        assert shape == ref_data.shape
+        data = np.empty(shape, dtype=dtype)
+        engine.Get(var, data, ab.Mode.Sync)
+        assert np.all(data == ref_data)
 
 
 @pytest.mark.xfail
