@@ -153,6 +153,11 @@ def test_File_open(test1_file):
     adios2py.File(test1_file)
 
 
+def test_File_bool(test1_file):
+    file = adios2py.File(test1_file)
+    assert bool(file)
+
+
 def test_check_test1_file(test1_file):
     """Checks reading using the adios2py API."""
     check_test1_file(test1_file)

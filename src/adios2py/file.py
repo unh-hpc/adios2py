@@ -18,6 +18,10 @@ class File:
         self._io = self._adios.DeclareIO("io-test1")
         self._engine = self._io.Open(os.fspath(filename), _mode_to_adios2[mode])
 
+    def __bool__(self) -> bool:
+        """Returns True if the file is open."""
+        return self._engine is not None and self._io is not None
+
 
 _mode_to_adios2 = {
     "r": adios2bindings.Mode.Read,
