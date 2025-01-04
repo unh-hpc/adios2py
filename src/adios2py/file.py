@@ -13,6 +13,9 @@ class File:
     Represents an ADIOS2 File or Stream.
     """
 
+    _io: adios2bindings.IO | None = None
+    _engine: adios2bindings.Engine | None = None
+
     def __init__(self, filename: os.PathLike[Any] | str, mode: str = "rra") -> None:
         """Open the file in the specified mode."""
         filename = os.fspath(filename)
