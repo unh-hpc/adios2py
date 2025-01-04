@@ -35,15 +35,6 @@ def test1_file(tmp_path):
     return filename
 
 
-def _adios2_to_dtype(type_str: str) -> np.dtype[Any]:
-    if type_str == "char":
-        type_str = "int8" if ab.is_char_signed else "uint8"
-    elif type_str.endswith("_t"):
-        type_str = type_str[:-2]
-
-    return np.dtype(type_str)
-
-
 def check_test1_file_lowlevel(filename: os.PathLike[Any] | str) -> None:
     ad = ab.ADIOS()
     io = ad.DeclareIO("io-test1")
@@ -53,7 +44,7 @@ def check_test1_file_lowlevel(filename: os.PathLike[Any] | str) -> None:
     for name, ref_data in sample_data.items():
         var = io.InquireVariable(name)
         assert var
-        dtype = _adios2_to_dtype(var.Type())
+        dtype = adios2py.util.adios2_to_dtype(var.Type())
         assert dtype == ref_data.dtype
         shape = tuple(var.Shape())
         assert shape == ref_data.shape
@@ -70,7 +61,7 @@ def check_test1_file(filename: os.PathLike[Any] | str) -> None:
     for name, ref_data in sample_data.items():
         var = io.InquireVariable(name)
         assert var
-        dtype = _adios2_to_dtype(var.Type())
+        dtype = adios2py.util.adios2_to_dtype(var.Type())
         assert dtype == ref_data.dtype
         shape = tuple(var.Shape())
         assert shape == ref_data.shape
