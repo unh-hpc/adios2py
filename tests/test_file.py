@@ -114,7 +114,7 @@ def test_adios2_3(tmp_path):
     assert var.Name()
 
 
-def test_write_test1_file(test1_file):
+def test_write_test1_file_lowlevel(test1_file):
     """Checks that test1_file is properly written.
 
     And at the same time, that it can be read using the low-level API.
@@ -167,3 +167,18 @@ def test_File_read(test1_file):
         assert np.all(data == ref_data)
         with pytest.raises(ValueError, match="not found"):
             file.read("not_there")
+
+
+def test_write_test1_file(tmp_path):
+    filename = tmp_path / "test1.bp"
+    ad = ab.ADIOS()
+    io = ad.DeclareIO("io-test1")
+    engine = io.Open(os.fspath(filename), ab.Mode.Write)
+
+    for name, data in sample_data.items():
+        var = io.DefineVariable(name, data, data.shape, [0] * data.ndim, data.shape)
+        engine.Put(var, np.asarray(data), ab.Mode.Sync)
+
+    engine.Close()
+
+    check_test1_file_lowlevel(filename)
