@@ -19,6 +19,7 @@ class File:
     _io: adios2bindings.IO | None = None
     _engine: adios2bindings.Engine | None = None
     _mode: str = ""
+    _current_step: int | None = None
 
     def __init__(self, filename: os.PathLike[Any] | str, mode: str = "rra") -> None:
         """Open the file in the specified mode."""
@@ -102,10 +103,20 @@ class File:
         self.engine.Put(var, data, adios2bindings.Mode.Sync)
 
     def _begin_step(self) -> None:
-        self.engine.BeginStep()
+        assert self._current_step is None
+        status = self.engine.BeginStep()
+        if status == adios2bindings.StepStatus.EndOfStream:
+            msg = "End of stream"
+            raise EOFError(msg)
+        if status != adios2bindings.StepStatus.OK:
+            msg = f"BeginStep failed with status {status}"
+            raise RuntimeError(msg)
+        self._current_step = self.engine.CurrentStep()
 
     def _end_step(self) -> None:
+        assert self._current_step is not None
         self.engine.EndStep()
+        self._current_step = None
 
     @contextlib.contextmanager
     def __next__(self) -> Iterator[File]:
