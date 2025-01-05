@@ -269,13 +269,12 @@ def test_test2_read(test2_file):
 def test_test2_read_rra(test2_file):
     file = adios2py.File(test2_file, "rra")
     for n in range(2):
-        file._begin_step()
+        step = file.steps[n]
         for name, ref_data in sample_data.items():
-            data = file.read(name, step_selection=(n, 1))
+            data = step.read(name)
             assert data.dtype == ref_data.dtype
             assert data.shape == ref_data.shape
             assert np.all(data == ref_data + n)
-        file._end_step()
 
 
 @pytest.mark.parametrize("mode", ["r", "rra"])

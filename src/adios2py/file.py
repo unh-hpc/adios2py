@@ -174,5 +174,16 @@ class StepsProxy(Iterable[Step]):
         yield Step(self._file)
         self._file._end_step()
 
+    def __getitem__(self, index: int) -> Step:
+        if self._file._mode != "rra":
+            msg = "Selecting steps by index is only supported in 'rra' mode"
+            raise IndexError(msg)
+
+        if index < 0 or index >= len(self):
+            msg = "Index out of range"
+            raise IndexError(msg)
+
+        return Step(self._file, index)
+
     def __len__(self) -> int:
         return self._file._steps()
