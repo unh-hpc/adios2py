@@ -266,6 +266,16 @@ def test_test2_read(test2_file):
         file._end_step()
 
 
+def test_test2_read_rra(test2_file):
+    file = adios2py.File(test2_file, "rra")
+    for n in range(2):
+        for name, ref_data in sample_data.items():
+            data = file.read(name, step_selection=(n, 1))
+            assert data.dtype == ref_data.dtype
+            assert data.shape == ref_data.shape
+            assert np.all(data == ref_data + n)
+
+
 def test_File_next_step(test2_file):
     file = adios2py.File(test2_file, "r")
     for n in range(2):

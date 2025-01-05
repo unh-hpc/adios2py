@@ -75,12 +75,18 @@ class File:
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         self.close()
 
-    def read(self, name: str) -> np.ndarray[Any, Any]:
+    def read(
+        self, name: str, step_selection: tuple[int, int] | None = None
+    ) -> np.ndarray[Any, Any]:
         """Read a variable from the file."""
         var = self.io.InquireVariable(name)
         if not var:
             msg = f"Variable '{name}' not found"
             raise ValueError(msg)
+
+        if step_selection is not None:
+            var.SetStepSelection(step_selection)
+
         dtype = util.adios2_to_dtype(var.Type())
         shape = tuple(var.Shape())
         data = np.empty(shape, dtype=dtype)
