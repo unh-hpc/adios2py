@@ -87,7 +87,7 @@ class File:
         self.engine.Get(var, data, adios2bindings.Mode.Sync)
         return data
 
-    def write(self, name: str, data: ArrayLike) -> None:
+    def _write(self, name: str, data: ArrayLike) -> None:
         """Write a variable to the file."""
         if self._current_step is None:
             msg = "Data needs to be written inside an active step."

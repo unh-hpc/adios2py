@@ -16,4 +16,4 @@ class Step:
         return self._file.read(name)
 
     def write(self, name: str, data: np.ndarray[Any, Any]) -> None:
-        self._file.write(name, data)
+        self._file._write(name, data)
