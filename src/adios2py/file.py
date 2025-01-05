@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import os
-from typing import Any, Iterator
+from typing import Any, Iterable, Iterator
 
 import adios2.bindings as adios2bindings  # type: ignore[import-untyped]
 import numpy as np
@@ -118,21 +118,30 @@ class File:
         self.engine.EndStep()
         self._current_step = None
 
-    def __iter__(self) -> Iterator[File]:
-        try:
-            while True:
-                try:
-                    self._begin_step()
-                except EOFError:
-                    break
-                yield self
-                self._end_step()
-        finally:
-            if self._current_step is not None:
-                self._end_step()
+    @property
+    def steps(self) -> StepsProxy:
+        return StepsProxy(self)
 
     @contextlib.contextmanager
     def next_step(self) -> Iterator[File]:
         self._begin_step()
         yield self
         self._end_step()
+
+
+class StepsProxy(Iterable[File]):
+    def __init__(self, File: File) -> None:
+        self._file = File
+
+    def __iter__(self) -> Iterator[File]:
+        try:
+            while True:
+                try:
+                    self._file._begin_step()
+                except EOFError:
+                    break
+                yield self._file
+                self._file._end_step()
+        finally:
+            if self._file._current_step is not None:
+                self._file._end_step()

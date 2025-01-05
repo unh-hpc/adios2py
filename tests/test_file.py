@@ -280,7 +280,7 @@ def test_File_next_step(test2_file):
 def test_File_iter(test2_file):
     file = adios2py.File(test2_file, "r")
 
-    for n, step in enumerate(file):
+    for n, step in enumerate(file.steps):
         for name, ref_data in sample_data.items():
             data = step.read(name)
             assert data.dtype == ref_data.dtype
@@ -292,7 +292,7 @@ def test_File_iter_break(test2_file):
     """Test that breaking out of the iteration works, and iteration can be resumed."""
     file = adios2py.File(test2_file, "r")
 
-    for n, step in enumerate(file):
+    for n, step in enumerate(file.steps):
         for name, ref_data in sample_data.items():
             data = step.read(name)
             assert data.dtype == ref_data.dtype
@@ -302,7 +302,7 @@ def test_File_iter_break(test2_file):
 
     assert file._current_step is None
 
-    for n, step in enumerate(file):
+    for n, step in enumerate(file.steps):
         for name, ref_data in sample_data.items():
             data = step.read(name)
             assert data.dtype == ref_data.dtype
