@@ -150,6 +150,11 @@ def test_File_repr(test1_file):
     assert "adios2py.File" in repr(file)
 
 
+def test_File_with(test1_file):
+    with adios2py.File(test1_file) as file:
+        assert file
+
+
 def test_File_read(test1_file):
     file = adios2py.File(test1_file)
     for name, ref_data in sample_data.items():

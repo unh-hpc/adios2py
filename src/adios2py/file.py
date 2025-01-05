@@ -65,6 +65,12 @@ class File:
         filename = self.engine.Name()
         return f"adios2py.File({filename=}, mode={self._mode})"
 
+    def __enter__(self) -> File:
+        return self
+
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
+        self.close()
+
     def read(self, name: str) -> np.ndarray[Any, Any]:
         """Read a variable from the file."""
         var = self.io.InquireVariable(name)
