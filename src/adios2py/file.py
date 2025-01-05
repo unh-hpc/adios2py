@@ -143,6 +143,9 @@ class File:
             self.engine.EndStep()
         self._in_step = False
 
+    def _steps(self) -> int:
+        return self.engine.Steps()  # type: ignore[no-any-return]
+
     @property
     def steps(self) -> StepsProxy:
         return StepsProxy(self)
@@ -170,3 +173,6 @@ class StepsProxy(Iterable[Step]):
         self._file._begin_step()
         yield Step(self._file)
         self._file._end_step()
+
+    def __len__(self) -> int:
+        return self._file._steps()

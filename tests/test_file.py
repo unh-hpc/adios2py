@@ -322,3 +322,9 @@ def test_File_iter_break(test2_file):
             assert data.shape == ref_data.shape
             assert np.all(data == ref_data + n + 1)
         break
+
+
+@pytest.mark.parametrize("mode", ["r", "rra"])
+def test_File_num_steps(test2_file, mode):
+    file = adios2py.File(test2_file, mode=mode)
+    assert len(file.steps) == 2
