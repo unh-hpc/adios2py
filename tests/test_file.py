@@ -278,8 +278,9 @@ def test_test2_read_rra(test2_file):
         file._end_step()
 
 
-def test_File_next_step(test2_file):
-    file = adios2py.File(test2_file, "r")
+@pytest.mark.parametrize("mode", ["r", "rra"])
+def test_File_next_step(test2_file, mode):
+    file = adios2py.File(test2_file, mode)
     for n in range(2):
         with file.steps.next() as step:
             for name, ref_data in sample_data.items():

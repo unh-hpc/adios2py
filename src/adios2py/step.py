@@ -16,7 +16,7 @@ class Step:
 
     def read(self, name: str) -> np.ndarray[Any, Any]:
         if self._file._mode == "rra":
-            raise NotImplementedError()
+            return self._file.read(name, step_selection=(self._step, 1))
 
         assert self._step == self._file.current_step()
         return self._file.read(name)
