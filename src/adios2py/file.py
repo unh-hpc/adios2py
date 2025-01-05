@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import contextlib
 import os
-from typing import Any
+from typing import Any, Iterator
 
 import adios2.bindings as adios2bindings  # type: ignore[import-untyped]
 import numpy as np
@@ -105,3 +106,9 @@ class File:
 
     def _end_step(self) -> None:
         self.engine.EndStep()
+
+    @contextlib.contextmanager
+    def next(self) -> Iterator[File]:
+        self._begin_step()
+        yield self
+        self._end_step()

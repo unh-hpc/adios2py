@@ -256,11 +256,22 @@ def test_write_test2_file(tmp_path):
 
 def test_test2_read(test2_file):
     file = adios2py.File(test2_file, "r")
-    for step in range(2):
+    for n in range(2):
         file._begin_step()
         for name, ref_data in sample_data.items():
             data = file.read(name)
             assert data.dtype == ref_data.dtype
             assert data.shape == ref_data.shape
-            assert np.all(data == ref_data + step)
+            assert np.all(data == ref_data + n)
         file._end_step()
+
+
+def test_test2_next(test2_file):
+    file = adios2py.File(test2_file, "r")
+    for n in range(2):
+        with file.next() as step:
+            for name, ref_data in sample_data.items():
+                data = step.read(name)
+                assert data.dtype == ref_data.dtype
+                assert data.shape == ref_data.shape
+                assert np.all(data == ref_data + n)
