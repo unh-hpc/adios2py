@@ -5,6 +5,7 @@ from typing import Any
 
 import adios2.bindings as adios2bindings  # type: ignore[import-untyped]
 import numpy as np
+from numpy.typing import ArrayLike
 
 from adios2py import util
 
@@ -83,11 +84,21 @@ class File:
         self.engine.Get(var, data, adios2bindings.Mode.Sync)
         return data
 
-    def write(self, name: str, data: np.ndarray[Any, Any]) -> None:
-        var = self.io.DefineVariable(
-            name, data, data.shape, [0] * data.ndim, data.shape
-        )
-        self.engine.Put(var, np.asarray(data), adios2bindings.Mode.Sync)
+    def write(self, name: str, data: ArrayLike) -> None:
+        data = np.asarray(data)
+        var = self.io.InquireVariable(name)
+        if not var:
+            var = self.io.DefineVariable(
+                name,
+                data,
+                data.shape,
+                [0] * data.ndim,
+                data.shape,
+                isConstantDims=True,
+            )
+        # don't allow for changing variable shape
+        assert tuple(var.Shape()) == data.shape
+        self.engine.Put(var, data, adios2bindings.Mode.Sync)
 
     def _begin_step(self) -> None:
         self.engine.BeginStep()
