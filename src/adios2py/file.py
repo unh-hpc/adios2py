@@ -16,10 +16,12 @@ class File:
 
     _io: adios2bindings.IO | None = None
     _engine: adios2bindings.Engine | None = None
+    _mode: str = ""
 
     def __init__(self, filename: os.PathLike[Any] | str, mode: str = "rra") -> None:
         """Open the file in the specified mode."""
         filename = os.fspath(filename)
+        self._mode = mode
         self._adios = adios2bindings.ADIOS()
         self._io_name = "io-adios2py"
         self._io = self._adios.DeclareIO(self._io_name)
@@ -55,6 +57,13 @@ class File:
         """Close the file when the object is deleted."""
         if self:
             self.close()
+
+    def __repr__(self) -> str:
+        if not self:
+            return "adios2py.File(closed)"
+
+        filename = self.engine.Name()
+        return f"adios2py.File({filename=}, mode={self._mode})"
 
     def read(self, name: str) -> np.ndarray[Any, Any]:
         """Read a variable from the file."""
