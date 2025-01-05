@@ -20,7 +20,7 @@ class File:
     _io: adios2bindings.IO | None = None
     _engine: adios2bindings.Engine | None = None
     _mode: str = ""
-    _current_step: int | None = None
+    _current_step: int = -1
     _in_step: bool = False
 
     def __init__(self, filename: os.PathLike[Any] | str, mode: str = "rra") -> None:
@@ -117,29 +117,30 @@ class File:
 
     def current_step(self) -> int:
         assert self.in_step()
-        assert self._current_step is not None
         return self._current_step
 
     def in_step(self) -> bool:
-        assert (self._current_step is not None) == self._in_step
         return self._in_step
 
     def _begin_step(self) -> None:
         assert not self.in_step()
-        status = self.engine.BeginStep()
-        if status == adios2bindings.StepStatus.EndOfStream:
-            msg = "End of stream"
-            raise EOFError(msg)
-        if status != adios2bindings.StepStatus.OK:
-            msg = f"BeginStep failed with status {status}"
-            raise RuntimeError(msg)
-        self._current_step = self.engine.CurrentStep()
+        if self._mode == "rra":
+            self._current_step = self._current_step + 1
+        else:
+            status = self.engine.BeginStep()
+            if status == adios2bindings.StepStatus.EndOfStream:
+                msg = "End of stream"
+                raise EOFError(msg)
+            if status != adios2bindings.StepStatus.OK:
+                msg = f"BeginStep failed with status {status}"
+                raise RuntimeError(msg)
+            self._current_step = self.engine.CurrentStep()
         self._in_step = True
 
     def _end_step(self) -> None:
         assert self.in_step()
-        self.engine.EndStep()
-        self._current_step = None
+        if self._mode != "rra":
+            self.engine.EndStep()
         self._in_step = False
 
     @property
