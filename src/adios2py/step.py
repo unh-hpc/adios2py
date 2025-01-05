@@ -12,7 +12,9 @@ class Step:
     def __init__(self, file: File, step: int | None = None) -> None:
         """Represents a step in an ADIOS2 file."""
         self._file = file
-        self._step = step or self._file.current_step()
+        if step is None:
+            step = file.current_step()
+        self._step = step
 
     def read(self, name: str) -> np.ndarray[Any, Any]:
         if self._file._mode == "rra":
