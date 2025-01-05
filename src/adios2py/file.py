@@ -9,6 +9,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 from adios2py import util
+from adios2py.step import Step
 
 
 class File:
@@ -123,25 +124,25 @@ class File:
         return StepsProxy(self)
 
 
-class StepsProxy(Iterable[File]):
+class StepsProxy(Iterable[Step]):
     def __init__(self, File: File) -> None:
         self._file = File
 
-    def __iter__(self) -> Iterator[File]:
+    def __iter__(self) -> Iterator[Step]:
         try:
             while True:
                 try:
                     self._file._begin_step()
                 except EOFError:
                     break
-                yield self._file
+                yield Step(self._file)
                 self._file._end_step()
         finally:
             if self._file._current_step is not None:
                 self._file._end_step()
 
     @contextlib.contextmanager
-    def next(self) -> Generator[File]:
+    def next(self) -> Generator[Step]:
         self._file._begin_step()
-        yield self._file
+        yield Step(self._file)
         self._file._end_step()
