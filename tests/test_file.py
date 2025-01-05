@@ -178,3 +178,65 @@ def test_write_test1_file(tmp_path):
             file.write(name, data)
 
     check_test1_file_lowlevel(filename)
+
+
+# Tests for a file with multiple steps
+
+
+@pytest.fixture
+def test2_file(tmp_path):
+    """Fixture returning the filename of a adios2 test file containing two steps."""
+
+    filename = tmp_path / "test2.bp"
+    ad = ab.ADIOS()
+    io = ad.DeclareIO("io-test2")
+    engine = io.Open(os.fspath(filename), ab.Mode.Write)
+
+    for step in range(2):
+        status = engine.BeginStep()
+        assert status == ab.StepStatus.OK
+        for name, data in sample_data.items():
+            var = io.InquireVariable(name)
+            if not var:
+                var = io.DefineVariable(
+                    name, data, data.shape, [0] * data.ndim, data.shape
+                )
+            engine.Put(var, np.asarray(data + step), ab.Mode.Sync)
+        engine.EndStep()
+
+    engine.Close()
+
+    return filename
+
+
+def check_test2_file_lowlevel(filename: os.PathLike[Any] | str) -> None:
+    ad = ab.ADIOS()
+    io = ad.DeclareIO("io-test2")
+    engine = io.Open(os.fspath(filename), ab.Mode.Read)
+    assert engine
+
+    for step in range(2):
+        status = engine.BeginStep()
+        assert status == ab.StepStatus.OK
+        for name, ref_data in sample_data.items():
+            var = io.InquireVariable(name)
+            assert var
+            dtype = adios2py.util.adios2_to_dtype(var.Type())
+            assert dtype == ref_data.dtype
+            shape = tuple(var.Shape())
+            assert shape == ref_data.shape
+            data = np.empty(shape, dtype=dtype)
+            engine.Get(var, data, ab.Mode.Sync)
+            assert np.all(data == ref_data + step)
+        engine.EndStep()
+
+    engine.Close()
+
+
+def test_write_test2_file_lowlevel(test2_file):
+    """Checks that test2_file is properly written.
+
+    And at the same time, that it can be read using the low-level API.
+    """
+    assert test2_file
+    check_test2_file_lowlevel(test2_file)
