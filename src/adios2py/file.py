@@ -95,7 +95,7 @@ class File:
 
     def _write(self, name: str, data: ArrayLike) -> None:
         """Write a variable to the file."""
-        if self._current_step is None:
+        if not self.in_step():
             msg = "Data needs to be written inside an active step."
             raise ValueError(msg)
 
@@ -114,8 +114,14 @@ class File:
         assert tuple(var.Shape()) == data.shape
         self.engine.Put(var, data, adios2bindings.Mode.Sync)
 
+    def current_step(self) -> int | None:
+        return self._current_step
+
+    def in_step(self) -> bool:
+        return self._current_step is not None
+
     def _begin_step(self) -> None:
-        assert self._current_step is None
+        assert not self.in_step()
         status = self.engine.BeginStep()
         if status == adios2bindings.StepStatus.EndOfStream:
             msg = "End of stream"
@@ -126,7 +132,7 @@ class File:
         self._current_step = self.engine.CurrentStep()
 
     def _end_step(self) -> None:
-        assert self._current_step is not None
+        assert self.in_step()
         self.engine.EndStep()
         self._current_step = None
 
@@ -149,7 +155,7 @@ class StepsProxy(Iterable[Step]):
                 yield Step(self._file)
                 self._file._end_step()
         finally:
-            if self._file._current_step is not None:
+            if self._file.in_step():
                 self._file._end_step()
 
     @contextlib.contextmanager

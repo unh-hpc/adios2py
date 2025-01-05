@@ -310,7 +310,7 @@ def test_File_iter_break(test2_file):
             assert np.all(data == ref_data + n)
         break
 
-    assert file._current_step is None
+    assert not file.in_step()
 
     for n, step in enumerate(file.steps):
         for name, ref_data in sample_data.items():
