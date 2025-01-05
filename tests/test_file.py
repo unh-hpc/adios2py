@@ -252,3 +252,15 @@ def test_write_test2_file(tmp_path):
             file._end_step()
 
     check_test2_file_lowlevel(filename)
+
+
+def test_test2_read(test2_file):
+    file = adios2py.File(test2_file, "r")
+    for step in range(2):
+        file._begin_step()
+        for name, ref_data in sample_data.items():
+            data = file.read(name)
+            assert data.dtype == ref_data.dtype
+            assert data.shape == ref_data.shape
+            assert np.all(data == ref_data + step)
+        file._end_step()
