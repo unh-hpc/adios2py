@@ -173,9 +173,6 @@ def test_write_test1_file(tmp_path):
     filename = tmp_path / "test1.bp"
     with adios2py.File(filename, "w") as file:
         for name, data in sample_data.items():
-            var = file.io.DefineVariable(
-                name, data, data.shape, [0] * data.ndim, data.shape
-            )
-            file.engine.Put(var, np.asarray(data), ab.Mode.Sync)
+            file.write(name, data)
 
     check_test1_file_lowlevel(filename)

@@ -82,3 +82,9 @@ class File:
         data = np.empty(shape, dtype=dtype)
         self.engine.Get(var, data, adios2bindings.Mode.Sync)
         return data
+
+    def write(self, name: str, data: np.ndarray[Any, Any]) -> None:
+        var = self.io.DefineVariable(
+            name, data, data.shape, [0] * data.ndim, data.shape
+        )
+        self.engine.Put(var, np.asarray(data), adios2bindings.Mode.Sync)
