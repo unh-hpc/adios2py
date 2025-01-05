@@ -119,13 +119,17 @@ class File:
         self._current_step = None
 
     def __iter__(self) -> Iterator[File]:
-        while True:
-            try:
-                self._begin_step()
-            except EOFError:
-                break
-            yield self
-            self._end_step()
+        try:
+            while True:
+                try:
+                    self._begin_step()
+                except EOFError:
+                    break
+                yield self
+                self._end_step()
+        finally:
+            if self._current_step is not None:
+                self._end_step()
 
     @contextlib.contextmanager
     def next_step(self) -> Iterator[File]:
