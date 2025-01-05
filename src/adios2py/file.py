@@ -118,6 +118,15 @@ class File:
         self.engine.EndStep()
         self._current_step = None
 
+    def __iter__(self) -> Iterator[File]:
+        while True:
+            try:
+                self._begin_step()
+            except EOFError:
+                break
+            yield self
+            self._end_step()
+
     @contextlib.contextmanager
     def __next__(self) -> Iterator[File]:
         self._begin_step()

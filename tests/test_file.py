@@ -275,3 +275,14 @@ def test_File_next(test2_file):
                 assert data.dtype == ref_data.dtype
                 assert data.shape == ref_data.shape
                 assert np.all(data == ref_data + n)
+
+
+def test_File_iter(test2_file):
+    file = adios2py.File(test2_file, "r")
+
+    for n, step in enumerate(file):
+        for name, ref_data in sample_data.items():
+            data = step.read(name)
+            assert data.dtype == ref_data.dtype
+            assert data.shape == ref_data.shape
+            assert np.all(data == ref_data + n)
