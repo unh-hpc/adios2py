@@ -173,9 +173,10 @@ def test_File_read(test1_file):
 
 def test_write_test1_file(tmp_path):
     filename = tmp_path / "test1.bp"
-    with adios2py.File(filename, "w") as file:
-        for name, data in sample_data.items():
-            file.write(name, data)
+    with adios2py.File(filename, "w") as file:  # noqa: SIM117
+        with file.steps.next() as step:
+            for name, data in sample_data.items():
+                step.write(name, data)
 
     check_test1_file_lowlevel(filename)
 
