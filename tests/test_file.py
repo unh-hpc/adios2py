@@ -245,11 +245,10 @@ def test_write_test2_file_lowlevel(test2_file):
 def test_write_test2_file(tmp_path):
     filename = tmp_path / "test2.bp"
     with adios2py.File(filename, "w") as file:
-        for step in range(2):
-            file._begin_step()
-            for name, data in sample_data.items():
-                file.write(name, data + step)
-            file._end_step()
+        for n in range(2):
+            with file.steps.next() as step:
+                for name, data in sample_data.items():
+                    step.write(name, data + n)
 
     check_test2_file_lowlevel(filename)
 
