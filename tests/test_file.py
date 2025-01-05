@@ -52,6 +52,8 @@ def check_test1_file_lowlevel(filename: os.PathLike[Any] | str) -> None:
         engine.Get(var, data, ab.Mode.Sync)
         assert np.all(data == ref_data)
 
+    engine.Close()
+
 
 @pytest.mark.xfail
 def test_adios2_1(tmp_path):
