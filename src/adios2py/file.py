@@ -21,6 +21,7 @@ class File:
     _engine: adios2bindings.Engine | None = None
     _mode: str = ""
     _current_step: int | None = None
+    _in_step: bool = False
 
     def __init__(self, filename: os.PathLike[Any] | str, mode: str = "rra") -> None:
         """Open the file in the specified mode."""
@@ -114,11 +115,14 @@ class File:
         assert tuple(var.Shape()) == data.shape
         self.engine.Put(var, data, adios2bindings.Mode.Sync)
 
-    def current_step(self) -> int | None:
+    def current_step(self) -> int:
+        assert self.in_step()
+        assert self._current_step is not None
         return self._current_step
 
     def in_step(self) -> bool:
-        return self._current_step is not None
+        assert (self._current_step is not None) == self._in_step
+        return self._in_step
 
     def _begin_step(self) -> None:
         assert not self.in_step()
@@ -130,11 +134,13 @@ class File:
             msg = f"BeginStep failed with status {status}"
             raise RuntimeError(msg)
         self._current_step = self.engine.CurrentStep()
+        self._in_step = True
 
     def _end_step(self) -> None:
         assert self.in_step()
         self.engine.EndStep()
         self._current_step = None
+        self._in_step = False
 
     @property
     def steps(self) -> StepsProxy:
