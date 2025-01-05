@@ -289,8 +289,9 @@ def test_File_next_step(test2_file, mode):
                 assert np.all(data == ref_data + n)
 
 
-def test_File_iter(test2_file):
-    file = adios2py.File(test2_file, "r")
+@pytest.mark.parametrize("mode", ["r", "rra"])
+def test_File_iter(test2_file, mode):
+    file = adios2py.File(test2_file, mode=mode)
 
     for n, step in enumerate(file.steps):
         for name, ref_data in sample_data.items():
@@ -300,9 +301,10 @@ def test_File_iter(test2_file):
             assert np.all(data == ref_data + n)
 
 
-def test_File_iter_break(test2_file):
+@pytest.mark.parametrize("mode", ["r", "rra"])
+def test_File_iter_break(test2_file, mode):
     """Test that breaking out of the iteration works, and iteration can be resumed."""
-    file = adios2py.File(test2_file, "r")
+    file = adios2py.File(test2_file, mode=mode)
 
     for n, step in enumerate(file.steps):
         for name, ref_data in sample_data.items():

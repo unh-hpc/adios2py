@@ -125,6 +125,8 @@ class File:
     def _begin_step(self) -> None:
         assert not self.in_step()
         if self._mode == "rra":
+            if self._current_step >= self._steps() - 1:
+                raise EOFError()
             self._current_step = self._current_step + 1
         else:
             status = self.engine.BeginStep()
