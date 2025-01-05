@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import os
-from typing import Any, Iterable, Iterator
+from typing import Any, Generator, Iterable, Iterator
 
 import adios2.bindings as adios2bindings  # type: ignore[import-untyped]
 import numpy as np
@@ -122,12 +122,6 @@ class File:
     def steps(self) -> StepsProxy:
         return StepsProxy(self)
 
-    @contextlib.contextmanager
-    def next_step(self) -> Iterator[File]:
-        self._begin_step()
-        yield self
-        self._end_step()
-
 
 class StepsProxy(Iterable[File]):
     def __init__(self, File: File) -> None:
@@ -145,3 +139,9 @@ class StepsProxy(Iterable[File]):
         finally:
             if self._file._current_step is not None:
                 self._file._end_step()
+
+    @contextlib.contextmanager
+    def next(self) -> Generator[File]:
+        self._file._begin_step()
+        yield self._file
+        self._file._end_step()
