@@ -9,10 +9,18 @@ if TYPE_CHECKING:
 
 
 class Step:
-    def __init__(self, File: File) -> None:
-        self._file = File
+    def __init__(self, file: File, step: int | None = None) -> None:
+        """Represents a step in an ADIOS2 file."""
+        self._file = file
+        if step is None:
+            step = self._file._current_step
+        self._step = step
 
     def read(self, name: str) -> np.ndarray[Any, Any]:
+        if self._file._mode == "rra":
+            raise NotImplementedError()
+
+        assert self._step == self._file._current_step
         return self._file.read(name)
 
     def write(self, name: str, data: np.ndarray[Any, Any]) -> None:
