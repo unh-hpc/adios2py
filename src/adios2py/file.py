@@ -128,7 +128,7 @@ class File:
             self._end_step()
 
     @contextlib.contextmanager
-    def __next__(self) -> Iterator[File]:
+    def next_step(self) -> Iterator[File]:
         self._begin_step()
         yield self
         self._end_step()
