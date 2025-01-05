@@ -88,3 +88,9 @@ class File:
             name, data, data.shape, [0] * data.ndim, data.shape
         )
         self.engine.Put(var, np.asarray(data), adios2bindings.Mode.Sync)
+
+    def _begin_step(self) -> None:
+        self.engine.BeginStep()
+
+    def _end_step(self) -> None:
+        self.engine.EndStep()
