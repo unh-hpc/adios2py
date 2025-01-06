@@ -76,7 +76,7 @@ class File:
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         self.close()
 
-    def read(
+    def _read(
         self, name: str, step_selection: tuple[int, int] | None = None
     ) -> np.ndarray[Any, Any]:
         """Read a variable from the file."""

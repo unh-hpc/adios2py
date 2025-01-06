@@ -18,10 +18,10 @@ class Step:
 
     def read(self, name: str) -> np.ndarray[Any, Any]:
         if self._file._mode == "rra":
-            return self._file.read(name, step_selection=(self._step, 1))
+            return self._file._read(name, step_selection=(self._step, 1))
 
         assert self._step == self._file.current_step()
-        return self._file.read(name)
+        return self._file._read(name)
 
     def write(self, name: str, data: np.ndarray[Any, Any]) -> None:
         self._file._write(name, data)
