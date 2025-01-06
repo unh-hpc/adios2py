@@ -133,6 +133,7 @@ messages_control.disable = [
   "missing-function-docstring",
   "wrong-import-position",
 ]
+ignored-modules = ["adios2.bindings"]
 
 [tool.uv]
 reinstall-package = ["adios2py"]
