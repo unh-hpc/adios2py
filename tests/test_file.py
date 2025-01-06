@@ -329,3 +329,22 @@ def test_File_iter_break(test2_file, mode):
 def test_File_num_steps(test2_file, mode):
     file = adios2py.File(test2_file, mode=mode)
     assert len(file.steps) == 2
+
+
+@pytest.mark.parametrize("mode", ["r", "rra"])
+def test_Step_Mapping(test2_file, mode):
+    file = adios2py.File(test2_file, mode=mode)
+    for step in file.steps:
+        assert len(step) == len(sample_data)
+        assert set(step) == set(sample_data)
+
+
+@pytest.mark.parametrize("mode", ["r", "rra"])
+def test_Step_getitem(test2_file, mode):
+    file = adios2py.File(test2_file, mode=mode)
+    for n, step in enumerate(file.steps):
+        for name, ref_data in sample_data.items():
+            data = step[name]
+            assert data.dtype == ref_data.dtype
+            assert data.shape == ref_data.shape
+            assert np.all(data == ref_data + n)
