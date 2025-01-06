@@ -7,6 +7,8 @@ import adios2.bindings as ab  # type: ignore[import-untyped]
 import numpy as np
 import pytest
 
+import adios2py
+
 sample_data = {
     "test_int_0d": np.array(99),
     "test_float_1d": np.arange(5.0),
@@ -33,15 +35,6 @@ def test1_file(tmp_path):
     return filename
 
 
-def _adios2_to_dtype(type_str: str) -> np.dtype[Any]:
-    if type_str == "char":
-        type_str = "int8" if ab.is_char_signed else "uint8"
-    elif type_str.endswith("_t"):
-        type_str = type_str[:-2]
-
-    return np.dtype(type_str)
-
-
 def check_test1_file_lowlevel(filename: os.PathLike[Any] | str) -> None:
     ad = ab.ADIOS()
     io = ad.DeclareIO("io-test1")
@@ -51,7 +44,7 @@ def check_test1_file_lowlevel(filename: os.PathLike[Any] | str) -> None:
     for name, ref_data in sample_data.items():
         var = io.InquireVariable(name)
         assert var
-        dtype = _adios2_to_dtype(var.Type())
+        dtype = adios2py.util.adios2_to_dtype(var.Type())
         assert dtype == ref_data.dtype
         shape = tuple(var.Shape())
         assert shape == ref_data.shape
@@ -128,3 +121,49 @@ def test_write_test1_file(test1_file):
     """
     assert test1_file
     check_test1_file_lowlevel(test1_file)
+
+
+def test_File_open(test1_file):
+    adios2py.File(test1_file)
+
+
+def test_File_bool(test1_file):
+    file = adios2py.File(test1_file)
+    assert bool(file)
+
+
+def test_File_close(test1_file):
+    file = adios2py.File(test1_file)
+    assert file
+    file.close()
+    assert "closed" in repr(file)
+    assert not file
+    with pytest.raises(ValueError, match="File is not open"):
+        file.close()
+
+
+def test_File_del(test1_file):
+    file = adios2py.File(test1_file)
+    assert file
+    del file
+
+
+def test_File_repr(test1_file):
+    file = adios2py.File(test1_file)
+    assert "adios2py.File" in repr(file)
+
+
+def test_File_with(test1_file):
+    with adios2py.File(test1_file) as file:
+        assert file
+
+
+def test_File_read(test1_file):
+    file = adios2py.File(test1_file)
+    for name, ref_data in sample_data.items():
+        data = file.read(name)
+        assert data.dtype == ref_data.dtype
+        assert data.shape == ref_data.shape
+        assert np.all(data == ref_data)
+        with pytest.raises(ValueError, match="not found"):
+            file.read("not_there")
