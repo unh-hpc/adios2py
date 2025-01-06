@@ -136,7 +136,10 @@ def test_File_close(test1_file):
     file = adios2py.File(test1_file)
     assert file
     file.close()
+    assert "closed" in repr(file)
     assert not file
+    with pytest.raises(ValueError, match="File is not open"):
+        file.close()
 
 
 def test_File_del(test1_file):
@@ -162,3 +165,5 @@ def test_File_read(test1_file):
         assert data.dtype == ref_data.dtype
         assert data.shape == ref_data.shape
         assert np.all(data == ref_data)
+        with pytest.raises(ValueError, match="not found"):
+            file.read("not_there")
