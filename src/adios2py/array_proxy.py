@@ -58,6 +58,13 @@ class ArrayProxy:
         return self.__array__()[key]
 
     def __array__(self, dtype: Any = None) -> NDArray[Any]:
-        data = self._step._read(self._name)
+        if self._step._file._mode == "rra":
+            data = self._step._file._read(
+                self._name, step_selection=(self._step._step, 1)
+            )
+        else:
+            assert self._step._step == self._step._file.current_step()
+            data = self._step._file._read(self._name)
+
         dtype = data.dtype if dtype is None else dtype
         return data.astype(dtype)
