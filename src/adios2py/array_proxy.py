@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import operator
 from types import EllipsisType as ellipsis
 from typing import TYPE_CHECKING, Any, SupportsIndex
 
@@ -14,7 +15,7 @@ class ArrayProxy:
     def __init__(
         self,
         file: File,
-        step: int,
+        step: int | None,
         name: str,
         dtype: np.dtype[Any],
         shape: tuple[int, ...],
@@ -61,9 +62,21 @@ class ArrayProxy:
             | tuple[None | slice | ellipsis | SupportsIndex, ...]
         ),
     ) -> NDArray[Any]:
+        if self._step is None:
+            assert isinstance(key, tuple)
+            assert len(key) > 0
+            step, *rem = key
+            assert isinstance(step, SupportsIndex)
+            data = self._file._read(
+                self._name, step_selection=(operator.index(step), 1)
+            )
+
+            return data[np.newaxis, ...][(0, *rem)]
+
         return self.__array__()[key]
 
     def __array__(self, dtype: Any = None) -> NDArray[Any]:
+        assert self._step is not None
         data = self._file._getitem(self._name, step=self._step)
 
         return data.astype(dtype)

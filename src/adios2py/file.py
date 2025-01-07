@@ -9,6 +9,7 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from adios2py import util
+from adios2py.array_proxy import ArrayProxy
 from adios2py.step import Step
 
 
@@ -123,6 +124,19 @@ class File:
     def _getitem(self, name: str, step: int) -> NDArray[Any]:
         """Read a variable from the file."""
         return self._read(name, step_selection=(step, 1))
+
+    def __getitem__(self, name: str) -> ArrayProxy:
+        """Read a variable from the file."""
+        if self._mode not in ("r", "rra"):
+            msg = f"Cannot read variables in mode {self._mode}."
+            raise ValueError(msg)
+        var = self.io.InquireVariable(name)
+        if not var:
+            msg = f"Variable {name} not found."
+            raise KeyError(msg)
+        dtype = np.dtype(util.adios2_to_dtype(var.Type()))
+        shape = tuple(var.Shape())
+        return ArrayProxy(self, step=None, name=name, dtype=dtype, shape=shape)
 
     def current_step(self) -> int:
         assert self.in_step()

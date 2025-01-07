@@ -393,3 +393,35 @@ def test_Array_stale(test2_file, mode):
                     assert np.all(data == ref_data + n)
             else:
                 assert np.all(data == ref_data + n)
+
+
+def test_File_getitem(test2_file):
+    file = adios2py.File(test2_file, mode="rra")
+    for n in range(len(file.steps)):
+        for name, ref_data in sample_data.items():
+            data = file[name][n, ...]
+            assert data.ndim == ref_data.ndim
+            assert data.size == data.size
+            assert data.dtype == ref_data.dtype
+            assert data.shape == ref_data.shape
+            assert np.all(data == ref_data + n)
+
+
+def test_File_getitem_r(test2_file):
+    file = adios2py.File(test2_file, mode="r")
+    for n, _ in enumerate(file.steps):
+        for name, ref_data in sample_data.items():
+            data = file[name][n, ...]
+            assert data.ndim == ref_data.ndim
+            assert data.size == data.size
+            assert data.dtype == ref_data.dtype
+            assert data.shape == ref_data.shape
+            assert np.all(data == ref_data + n)
+
+
+def test_File_getitem_r_out_of_order(test2_file):
+    file = adios2py.File(test2_file, mode="r")
+    for n, _ in enumerate(file.steps):
+        for name, _ in sample_data.items():
+            with pytest.raises(ValueError, match="non-current step"):
+                file[name][n + 1, ...]
