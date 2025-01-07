@@ -33,6 +33,21 @@ class ArrayProxy:
     def shape(self) -> tuple[int, ...]:
         return self._shape
 
+    @property
+    def size(self) -> int:
+        return int(np.prod(self.shape))
+
+    @property
+    def ndim(self) -> int:
+        return len(self.shape)
+
+    def __len__(self) -> int:
+        if self.ndim == 0:
+            msg = "len() of unsized object"
+            raise TypeError(msg)
+
+        return self.shape[0]
+
     def __getitem__(
         self,
         key: (

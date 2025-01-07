@@ -345,6 +345,17 @@ def test_Step_getitem(test2_file, mode):
     for n, step in enumerate(file.steps):
         for name, ref_data in sample_data.items():
             data = step[name]
+            assert data.ndim == ref_data.ndim
+            assert data.size == data.size
             assert data.dtype == ref_data.dtype
             assert data.shape == ref_data.shape
             assert np.all(data == ref_data + n)
+
+            if data.ndim == 0:
+                msg = r"len\(\) of unsized object"
+                with pytest.raises(TypeError, match=msg):
+                    len(data)
+                with pytest.raises(TypeError, match=msg):
+                    len(ref_data)
+            else:
+                assert len(data) == len(ref_data)
