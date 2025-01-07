@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import contextlib
+import operator
 import os
-from typing import Any, Generator, Iterable, Iterator
+from typing import Any, Generator, Iterable, Iterator, SupportsIndex
 
 import adios2.bindings as adios2bindings  # type: ignore[import-untyped]
 import numpy as np
@@ -78,7 +79,7 @@ class File:
         self.close()
 
     def _read(
-        self, name: str, step_selection: tuple[int, int] | None = None
+        self, name: str, step: SupportsIndex | slice | None = None
     ) -> NDArray[Any]:
         """Read a variable from the file."""
         var = self.io.InquireVariable(name)
@@ -86,7 +87,21 @@ class File:
             msg = f"Variable '{name}' not found"
             raise ValueError(msg)
 
-        if step_selection is not None:
+        dtype = util.adios2_to_dtype(var.Type())
+        shape = tuple(var.Shape())
+
+        if step is not None:
+            if isinstance(step, SupportsIndex):
+                step_selection = (operator.index(step), 1)
+            elif isinstance(step, slice):
+                start, stop, _step = step.indices(self._steps())
+                if _step != 1:
+                    raise NotImplementedError()
+                step_selection = (start, stop - start)
+                shape = (stop - start, *shape)
+            else:
+                raise NotImplementedError()
+
             if self._mode == "rra":
                 var.SetStepSelection(step_selection)
             else:  # streaming mode  # noqa: PLR5501
@@ -94,8 +109,6 @@ class File:
                     msg = "Trying to access non-current step in streaming mode"
                     raise ValueError(msg)
 
-        dtype = util.adios2_to_dtype(var.Type())
-        shape = tuple(var.Shape())
         data = np.empty(shape, dtype=dtype)
         self.engine.Get(var, data, adios2bindings.Mode.Sync)
         return data

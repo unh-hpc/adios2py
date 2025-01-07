@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import operator
 from types import EllipsisType as ellipsis
 from typing import TYPE_CHECKING, Any, SupportsIndex
 
@@ -84,14 +83,12 @@ class ArrayProxy:
         step, *rem = key
 
         if isinstance(step, SupportsIndex):
-            data = self._file._read(
-                self._name, step_selection=(operator.index(step), 1)
-            )
+            data = self._file._read(self._name, step=step)
+
             return data[tuple(rem)] if rem else data
 
         if isinstance(step, slice):
-            step_selection = (step.start, step.stop - step.start)
-            data = self._file._read(self._name, step_selection=step_selection)
-            return data[(np.newaxis, *rem)]
+            data = self._file._read(self._name, step=step)
+            return data[(slice(None), *rem)]
 
         raise NotImplementedError()
