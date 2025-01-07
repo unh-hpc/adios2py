@@ -21,7 +21,7 @@ class ArrayProxy:
         shape: tuple[int, ...],
     ) -> None:
         self._file = file
-        self._step = step
+        self._step = slice(step, step + 1) if step is not None else None
         self._name = name
         self._dtype = dtype
         self._shape = shape
@@ -76,7 +76,8 @@ class ArrayProxy:
         return self.__array__()[key]
 
     def __array__(self, dtype: Any = None) -> NDArray[Any]:
-        assert self._step is not None
-        data = self._file._read(self._name, step_selection=(self._step, 1))
+        assert isinstance(self._step, slice)
+        step_selection = (self._step.start, self._step.stop - self._step.start)
+        data = self._file._read(self._name, step_selection=step_selection)
 
         return data.astype(dtype)
