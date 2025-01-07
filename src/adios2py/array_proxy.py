@@ -7,14 +7,19 @@ import numpy as np
 from numpy.typing import NDArray
 
 if TYPE_CHECKING:
-    from adios2py.step import Step
+    from adios2py.file import File
 
 
 class ArrayProxy:
     def __init__(
-        self, step: Step, name: str, dtype: np.dtype[Any], shape: tuple[int, ...]
+        self,
+        file: File,
+        step: int,
+        name: str,
+        dtype: np.dtype[Any],
+        shape: tuple[int, ...],
     ) -> None:
-        self._file = step._file
+        self._file = file
         self._step = step
         self._name = name
         self._dtype = dtype
@@ -60,9 +65,9 @@ class ArrayProxy:
 
     def __array__(self, dtype: Any = None) -> NDArray[Any]:
         if self._file._mode == "rra":
-            data = self._file._read(self._name, step_selection=(self._step._step, 1))
+            data = self._file._read(self._name, step_selection=(self._step, 1))
         else:
-            assert self._step._step == self._file.current_step()
+            assert self._step == self._file.current_step()
             data = self._file._read(self._name)
 
         dtype = data.dtype if dtype is None else dtype

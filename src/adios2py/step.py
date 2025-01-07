@@ -47,7 +47,7 @@ class Step(Mapping[str, ArrayProxy]):
             raise KeyError(msg)
         dtype = np.dtype(util.adios2_to_dtype(var.Type()))
         shape = tuple(var.Shape())
-        return ArrayProxy(self, name, dtype, shape)
+        return ArrayProxy(self._file, self._step, name, dtype, shape)
 
     def _keys(self) -> set[str]:
         return self._file.io.AvailableVariables()  # type: ignore[no-any-return]
