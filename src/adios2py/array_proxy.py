@@ -87,12 +87,11 @@ class ArrayProxy:
             data = self._file._read(
                 self._name, step_selection=(operator.index(step), 1)
             )
-        elif isinstance(step, slice):
+            return data[tuple(rem)] if rem else data
+
+        if isinstance(step, slice):
             step_selection = (step.start, step.stop - step.start)
             data = self._file._read(self._name, step_selection=step_selection)
-        else:
-            raise NotImplementedError()
+            return data[(np.newaxis, *rem)]
 
-        if not rem:
-            return data
-        return data[tuple(rem)]
+        raise NotImplementedError()

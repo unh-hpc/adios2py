@@ -437,3 +437,14 @@ def test_File_getitem_slice(test2_file):
         assert data.dtype == ref_data.dtype
         assert data.shape == ref_data.shape
         assert np.all(data == ref_data + n)
+
+
+def test_File_getitem_time_slice(test2_file):
+    file = adios2py.File(test2_file, mode="rra")
+    ref_data = sample_data["test_float_1d"][np.newaxis, 1:3]
+    data = file["test_float_1d"][0:1, 1:3]
+    assert data.ndim == ref_data.ndim
+    assert data.size == data.size
+    assert data.dtype == ref_data.dtype
+    assert data.shape == ref_data.shape
+    assert np.all(data == ref_data)
