@@ -78,7 +78,7 @@ class File:
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         self.close()
 
-    def _read(self, name: str, step: SupportsIndex | slice) -> NDArray[Any]:
+    def _read(self, name: str, key: tuple[SupportsIndex | slice, ...]) -> NDArray[Any]:
         """Read a variable from the file."""
         var = self.io.InquireVariable(name)
         if not var:
@@ -87,6 +87,7 @@ class File:
 
         dtype = util.adios2_to_dtype(var.Type())
         shape = tuple(var.Shape())
+        step = key[0]
 
         if isinstance(step, SupportsIndex):
             step_selection = (operator.index(step), 1)

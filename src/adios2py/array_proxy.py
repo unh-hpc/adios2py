@@ -78,7 +78,7 @@ class ArrayProxy:
         if not isinstance(step, SupportsIndex):
             rem = (slice(None), *rem)
 
-        data = self._file._read(self._name, step=step)
+        data = self._file._read(self._name, key=(step,))
 
         return data[rem] if rem else data
 
