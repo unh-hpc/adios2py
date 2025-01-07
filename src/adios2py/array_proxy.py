@@ -70,5 +70,4 @@ class ArrayProxy:
             assert self._step == self._file.current_step()
             data = self._file._read(self._name)
 
-        dtype = data.dtype if dtype is None else dtype
         return data.astype(dtype)
