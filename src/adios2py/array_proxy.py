@@ -64,6 +64,6 @@ class ArrayProxy:
         return self.__array__()[key]
 
     def __array__(self, dtype: Any = None) -> NDArray[Any]:
-        data = self._file._read(self._name, step_selection=(self._step, 1))
+        data = self._file._getitem(self._name, step=self._step)
 
         return data.astype(dtype)

@@ -120,6 +120,10 @@ class File:
         assert tuple(var.Shape()) == data.shape
         self.engine.Put(var, data, adios2bindings.Mode.Sync)
 
+    def _getitem(self, name: str, step: int) -> NDArray[Any]:
+        """Read a variable from the file."""
+        return self._read(name, step_selection=(step, 1))
+
     def current_step(self) -> int:
         assert self.in_step()
         return self._current_step
