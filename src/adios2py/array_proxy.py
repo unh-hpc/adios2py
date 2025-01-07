@@ -77,6 +77,6 @@ class ArrayProxy:
 
     def __array__(self, dtype: Any = None) -> NDArray[Any]:
         assert self._step is not None
-        data = self._file._getitem(self._name, step=self._step)
+        data = self._file._read(self._name, step_selection=(self._step, 1))
 
         return data.astype(dtype)
