@@ -51,6 +51,10 @@ class ArrayProxy:
 
         return self.shape[0]
 
+    def __array__(self, dtype: Any = None) -> NDArray[Any]:
+        data = self[(self._step,)]
+        return data.astype(dtype)
+
     def __getitem__(
         self,
         key: (
@@ -63,18 +67,6 @@ class ArrayProxy:
     ) -> NDArray[Any]:
         if not isinstance(key, tuple):
             key = (key,)
-
-        return self._getitem(key)
-
-    def __array__(self, dtype: Any = None) -> NDArray[Any]:
-        data = self._getitem((self._step,))
-        return data.astype(dtype)
-
-    def _getitem(
-        self,
-        key: tuple[None | slice | ellipsis | SupportsIndex, ...],
-    ) -> NDArray[Any]:
-        assert isinstance(key, tuple)
         assert len(key) > 0
         step, *rem_list = key
         rem = tuple(rem_list)
