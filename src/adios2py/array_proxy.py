@@ -14,6 +14,7 @@ class ArrayProxy:
     def __init__(
         self, step: Step, name: str, dtype: np.dtype[Any], shape: tuple[int, ...]
     ) -> None:
+        self._file = step._file
         self._step = step
         self._name = name
         self._dtype = dtype
@@ -58,13 +59,11 @@ class ArrayProxy:
         return self.__array__()[key]
 
     def __array__(self, dtype: Any = None) -> NDArray[Any]:
-        if self._step._file._mode == "rra":
-            data = self._step._file._read(
-                self._name, step_selection=(self._step._step, 1)
-            )
+        if self._file._mode == "rra":
+            data = self._file._read(self._name, step_selection=(self._step._step, 1))
         else:
-            assert self._step._step == self._step._file.current_step()
-            data = self._step._file._read(self._name)
+            assert self._step._step == self._file.current_step()
+            data = self._file._read(self._name)
 
         dtype = data.dtype if dtype is None else dtype
         return data.astype(dtype)
