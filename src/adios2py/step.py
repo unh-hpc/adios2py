@@ -61,7 +61,7 @@ class ArrayProxy:
         return self.__array__()[key]
 
     def __array__(self, dtype: Any = None) -> NDArray[Any]:
-        data = self._step.read(self._name)
+        data = self._step._read(self._name)
         dtype = data.dtype if dtype is None else dtype
         return data.astype(dtype)
 
@@ -74,7 +74,7 @@ class Step(Mapping[str, ArrayProxy]):
             step = file.current_step()
         self._step = step
 
-    def read(self, name: str) -> NDArray[Any]:
+    def _read(self, name: str) -> NDArray[Any]:
         if self._file._mode == "rra":
             return self._file._read(name, step_selection=(self._step, 1))
 

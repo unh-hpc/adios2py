@@ -271,7 +271,7 @@ def test_test2_read_rra(test2_file):
     for n in range(2):
         step = file.steps[n]
         for name, ref_data in sample_data.items():
-            data = step.read(name)
+            data = step[name]
             assert data.dtype == ref_data.dtype
             assert data.shape == ref_data.shape
             assert np.all(data == ref_data + n)
@@ -283,7 +283,7 @@ def test_File_next_step(test2_file, mode):
     for n in range(2):
         with file.steps.next() as step:
             for name, ref_data in sample_data.items():
-                data = step.read(name)
+                data = step[name]
                 assert data.dtype == ref_data.dtype
                 assert data.shape == ref_data.shape
                 assert np.all(data == ref_data + n)
@@ -295,7 +295,7 @@ def test_File_iter(test2_file, mode):
 
     for n, step in enumerate(file.steps):
         for name, ref_data in sample_data.items():
-            data = step.read(name)
+            data = step[name]
             assert data.dtype == ref_data.dtype
             assert data.shape == ref_data.shape
             assert np.all(data == ref_data + n)
@@ -308,7 +308,7 @@ def test_File_iter_break(test2_file, mode):
 
     for n, step in enumerate(file.steps):
         for name, ref_data in sample_data.items():
-            data = step.read(name)
+            data = step[name]
             assert data.dtype == ref_data.dtype
             assert data.shape == ref_data.shape
             assert np.all(data == ref_data + n)
@@ -318,7 +318,7 @@ def test_File_iter_break(test2_file, mode):
 
     for n, step in enumerate(file.steps):
         for name, ref_data in sample_data.items():
-            data = step.read(name)
+            data = step[name]
             assert data.dtype == ref_data.dtype
             assert data.shape == ref_data.shape
             assert np.all(data == ref_data + n + 1)
