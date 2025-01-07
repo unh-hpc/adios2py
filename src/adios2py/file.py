@@ -86,7 +86,12 @@ class File:
             raise ValueError(msg)
 
         if step_selection is not None:
-            var.SetStepSelection(step_selection)
+            if self._mode == "rra":
+                var.SetStepSelection(step_selection)
+            else:  # streaming mode  # noqa: PLR5501
+                if not self.in_step() or step_selection != (self.current_step(), 1):
+                    msg = "Trying to access non-current step in streaming mode"
+                    raise ValueError(msg)
 
         dtype = util.adios2_to_dtype(var.Type())
         shape = tuple(var.Shape())
