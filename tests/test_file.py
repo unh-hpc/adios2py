@@ -425,3 +425,15 @@ def test_File_getitem_r_out_of_order(test2_file):
         for name, _ in sample_data.items():
             with pytest.raises(ValueError, match="non-current step"):
                 file[name][n + 1, ...]
+
+
+def test_File_getitem_slice(test2_file):
+    file = adios2py.File(test2_file, mode="rra")
+    for n in range(len(file.steps)):
+        data = file["test_float_1d"][n, 1:3]
+        ref_data = sample_data["test_float_1d"][1:3]
+        assert data.ndim == ref_data.ndim
+        assert data.size == data.size
+        assert data.dtype == ref_data.dtype
+        assert data.shape == ref_data.shape
+        assert np.all(data == ref_data + n)

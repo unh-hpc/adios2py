@@ -62,22 +62,37 @@ class ArrayProxy:
             | tuple[None | slice | ellipsis | SupportsIndex, ...]
         ),
     ) -> NDArray[Any]:
-        if self._step is None:
-            assert isinstance(key, tuple)
-            assert len(key) > 0
-            step, *rem = key
-            assert isinstance(step, SupportsIndex)
-            data = self._file._read(
-                self._name, step_selection=(operator.index(step), 1)
-            )
+        if not isinstance(key, tuple):
+            key = (key,)
 
-            return data[np.newaxis, ...][(0, *rem)]
+        if self._step is not None:
+            key = (self._step, *key)
 
-        return self.__array__()[key]
+        return self._getitem(key)
 
     def __array__(self, dtype: Any = None) -> NDArray[Any]:
         assert isinstance(self._step, slice)
-        step_selection = (self._step.start, self._step.stop - self._step.start)
-        data = self._file._read(self._name, step_selection=step_selection)
-
+        data = self._getitem((self._step,))
         return data.astype(dtype)
+
+    def _getitem(
+        self,
+        key: tuple[None | slice | ellipsis | SupportsIndex, ...],
+    ) -> NDArray[Any]:
+        assert isinstance(key, tuple)
+        assert len(key) > 0
+        step, *rem = key
+
+        if isinstance(step, SupportsIndex):
+            data = self._file._read(
+                self._name, step_selection=(operator.index(step), 1)
+            )
+        elif isinstance(step, slice):
+            step_selection = (step.start, step.stop - step.start)
+            data = self._file._read(self._name, step_selection=step_selection)
+        else:
+            raise NotImplementedError()
+
+        if not rem:
+            return data
+        return data[tuple(rem)]
