@@ -52,7 +52,8 @@ class ArrayProxy:
         return self.shape[0]
 
     def __array__(self, dtype: Any = None) -> NDArray[Any]:
-        return self[...].astype(dtype)
+        data = self[(self._step,)]
+        return data.astype(dtype)
 
     def __getitem__(
         self,
@@ -66,8 +67,7 @@ class ArrayProxy:
     ) -> NDArray[Any]:
         if not isinstance(key, tuple):
             key = (key,)
-        assert len(key) > 0
-        if key == (Ellipsis,):
+        if key in ((), (Ellipsis,)):
             key = (slice(None), Ellipsis)
 
         step, *rem_list = key
@@ -80,6 +80,6 @@ class ArrayProxy:
 
         data = self._file._read(self._name, step=step)
 
-        return data[tuple(rem)] if rem else data
+        return data[rem] if rem else data
 
         raise NotImplementedError()

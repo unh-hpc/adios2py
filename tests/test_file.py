@@ -476,6 +476,18 @@ def test_File_getitem_time_all(test2_file):
     assert np.all(data == ref_data)
 
 
+def test_File_getitem_time_empty(test2_file):
+    file = adios2py.File(test2_file, mode="rra")
+    ref_data = np.stack(
+        (sample_data["test_float_1d"], sample_data["test_float_1d"] + 1), axis=0
+    )
+    data = file["test_float_1d"][()]
+    ref_data = ref_data[:]
+    assert data.dtype == ref_data.dtype
+    assert data.shape == ref_data.shape
+    assert np.all(data == ref_data)
+
+
 def test_File_getitem_as_array(test2_file):
     file = adios2py.File(test2_file, mode="rra")
     ref_data = np.stack(
