@@ -78,9 +78,7 @@ class File:
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         self.close()
 
-    def _read(
-        self, name: str, step: SupportsIndex | slice | None = None
-    ) -> NDArray[Any]:
+    def _read(self, name: str, step: SupportsIndex | slice) -> NDArray[Any]:
         """Read a variable from the file."""
         var = self.io.InquireVariable(name)
         if not var:
@@ -90,24 +88,23 @@ class File:
         dtype = util.adios2_to_dtype(var.Type())
         shape = tuple(var.Shape())
 
-        if step is not None:
-            if isinstance(step, SupportsIndex):
-                step_selection = (operator.index(step), 1)
-            elif isinstance(step, slice):
-                start, stop, _step = step.indices(self._steps())
-                if _step != 1:
-                    raise NotImplementedError()
-                step_selection = (start, stop - start)
-                shape = (stop - start, *shape)
-            else:
+        if isinstance(step, SupportsIndex):
+            step_selection = (operator.index(step), 1)
+        elif isinstance(step, slice):
+            start, stop, _step = step.indices(self._steps())
+            if _step != 1:
                 raise NotImplementedError()
+            step_selection = (start, stop - start)
+            shape = (stop - start, *shape)
+        else:
+            raise NotImplementedError()
 
-            if self._mode == "rra":
-                var.SetStepSelection(step_selection)
-            else:  # streaming mode  # noqa: PLR5501
-                if not self.in_step() or step_selection != (self.current_step(), 1):
-                    msg = "Trying to access non-current step in streaming mode"
-                    raise ValueError(msg)
+        if self._mode == "rra":
+            var.SetStepSelection(step_selection)
+        else:  # streaming mode  # noqa: PLR5501
+            if not self.in_step() or step_selection != (self.current_step(), 1):
+                msg = "Trying to access non-current step in streaming mode"
+                raise ValueError(msg)
 
         data = np.empty(shape, dtype=dtype)
         self.engine.Get(var, data, adios2bindings.Mode.Sync)
