@@ -163,12 +163,12 @@ def test_File_with(test1_file):
 def test_File_read(test1_file):
     file = adios2py.File(test1_file)
     for name, ref_data in sample_data.items():
-        data = file._read(name, key=(0,))
+        data = file._read(name, index=(0,))
         assert data.dtype == ref_data.dtype
         assert data.shape == ref_data.shape
         assert np.all(data == ref_data)
         with pytest.raises(ValueError, match="not found"):
-            file._read("not_there", key=(0,))
+            file._read("not_there", index=(0,))
 
 
 def test_write_test1_file(tmp_path):
@@ -259,7 +259,7 @@ def test_test2_read(test2_file):
     for n in range(2):
         file._begin_step()
         for name, ref_data in sample_data.items():
-            data = file._read(name, key=(n,))
+            data = file._read(name, index=(n,))
             assert data.dtype == ref_data.dtype
             assert data.shape == ref_data.shape
             assert np.all(data == ref_data + n)

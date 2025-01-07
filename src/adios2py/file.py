@@ -80,7 +80,7 @@ class File:
         self.close()
 
     def _read(
-        self, name: str, key: tuple[SupportsIndex | slice | EllipsisType | None, ...]
+        self, name: str, index: tuple[SupportsIndex | slice | EllipsisType | None, ...]
     ) -> NDArray[Any]:
         """Read a variable from the file."""
         var = self.io.InquireVariable(name)
@@ -91,7 +91,7 @@ class File:
         dtype = util.adios2_to_dtype(var.Type())
         shape = tuple(var.Shape())
 
-        step, *rem_list = key
+        step, *rem_list = index
         rem = tuple(rem_list)
 
         assert isinstance(step, SupportsIndex | slice)

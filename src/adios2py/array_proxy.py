@@ -57,7 +57,7 @@ class ArrayProxy:
 
     def __getitem__(
         self,
-        key: (
+        index: (
             None
             | slice
             | ellipsis
@@ -65,9 +65,9 @@ class ArrayProxy:
             | tuple[None | slice | ellipsis | SupportsIndex, ...]
         ),
     ) -> NDArray[Any]:
-        if not isinstance(key, tuple):
-            key = (key,)
-        if key in ((), (Ellipsis,)):
-            key = (slice(None), Ellipsis)
+        if not isinstance(index, tuple):
+            index = (index,)
+        if index in ((), (Ellipsis,)):
+            index = (slice(None), Ellipsis)
 
-        return self._file._read(self._name, key=key)
+        return self._file._read(self._name, index)
