@@ -70,16 +70,4 @@ class ArrayProxy:
         if key in ((), (Ellipsis,)):
             key = (slice(None), Ellipsis)
 
-        step, *rem_list = key
-        rem = tuple(rem_list)
-
-        assert isinstance(step, SupportsIndex | slice)
-
-        if not isinstance(step, SupportsIndex):
-            rem = (slice(None), *rem)
-
-        data = self._file._read(self._name, key=(step,))
-
-        return data[rem] if rem else data
-
-        raise NotImplementedError()
+        return self._file._read(self._name, key=key)

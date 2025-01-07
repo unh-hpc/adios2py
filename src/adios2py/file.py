@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 import operator
 import os
+from types import EllipsisType
 from typing import Any, Generator, Iterable, Iterator, SupportsIndex
 
 import adios2.bindings as adios2bindings  # type: ignore[import-untyped]
@@ -78,7 +79,9 @@ class File:
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         self.close()
 
-    def _read(self, name: str, key: tuple[SupportsIndex | slice, ...]) -> NDArray[Any]:
+    def _read(
+        self, name: str, key: tuple[SupportsIndex | slice | EllipsisType | None, ...]
+    ) -> NDArray[Any]:
         """Read a variable from the file."""
         var = self.io.InquireVariable(name)
         if not var:
@@ -87,7 +90,14 @@ class File:
 
         dtype = util.adios2_to_dtype(var.Type())
         shape = tuple(var.Shape())
-        step = key[0]
+
+        step, *rem_list = key
+        rem = tuple(rem_list)
+
+        assert isinstance(step, SupportsIndex | slice)
+
+        if not isinstance(step, SupportsIndex):
+            rem = (slice(None), *rem)
 
         if isinstance(step, SupportsIndex):
             step_selection = (operator.index(step), 1)
@@ -109,7 +119,8 @@ class File:
 
         data = np.empty(shape, dtype=dtype)
         self.engine.Get(var, data, adios2bindings.Mode.Sync)
-        return data
+
+        return data[tuple(rem)] if rem else data
 
     def _write(self, name: str, data: ArrayLike) -> None:
         """Write a variable to the file."""
