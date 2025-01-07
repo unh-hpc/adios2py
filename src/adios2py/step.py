@@ -10,22 +10,28 @@ from numpy.typing import NDArray
 if TYPE_CHECKING:
     from adios2py.file import File
 
+from adios2py import util
+
 
 class ArrayProxy:
-    def __init__(self, step: Step, name: str) -> None:
+    def __init__(
+        self, step: Step, name: str, dtype: np.dtype[Any], shape: tuple[int, ...]
+    ) -> None:
         self._step = step
         self._name = name
+        self._dtype = dtype
+        self._shape = shape
 
     def __repr__(self) -> str:
         return f"ArrayProxy({self._name})"
 
     @property
     def dtype(self) -> np.dtype[Any]:
-        return self.__array__().dtype
+        return self._dtype
 
     @property
     def shape(self) -> tuple[int, ...]:
-        return self.__array__().shape
+        return self._shape
 
     def __getitem__(
         self,
@@ -73,7 +79,13 @@ class Step(Mapping[str, ArrayProxy]):
         if self._file._mode not in ("r", "rra"):
             msg = f"Cannot read variables in mode {self._file._mode}."
             raise ValueError(msg)
-        return ArrayProxy(self, name)
+        var = self._file.io.InquireVariable(name)
+        if not var:
+            msg = f"Variable {name} not found."
+            raise KeyError(msg)
+        dtype = np.dtype(util.adios2_to_dtype(var.Type()))
+        shape = tuple(var.Shape())
+        return ArrayProxy(self, name, dtype, shape)
 
     def _keys(self) -> set[str]:
         return self._file.io.AvailableVariables()  # type: ignore[no-any-return]
