@@ -52,6 +52,8 @@ def check_test1_file_lowlevel(filename: os.PathLike[Any] | str) -> None:
         engine.Get(var, data, ab.Mode.Sync)
         assert np.all(data == ref_data)
 
+    engine.Close()
+
 
 @pytest.mark.xfail
 def test_adios2_1(tmp_path):
@@ -114,7 +116,7 @@ def test_adios2_3(tmp_path):
     assert var.Name()
 
 
-def test_write_test1_file(test1_file):
+def test_write_test1_file_lowlevel(test1_file):
     """Checks that test1_file is properly written.
 
     And at the same time, that it can be read using the low-level API.
@@ -167,3 +169,12 @@ def test_File_read(test1_file):
         assert np.all(data == ref_data)
         with pytest.raises(ValueError, match="not found"):
             file.read("not_there")
+
+
+def test_write_test1_file(tmp_path):
+    filename = tmp_path / "test1.bp"
+    with adios2py.File(filename, "w") as file:
+        for name, data in sample_data.items():
+            file.write(name, data)
+
+    check_test1_file_lowlevel(filename)
