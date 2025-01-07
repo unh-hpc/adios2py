@@ -67,7 +67,9 @@ class ArrayProxy:
         if self._file._mode == "rra":
             data = self._file._read(self._name, step_selection=(self._step, 1))
         else:
-            assert self._step == self._file.current_step()
+            if not self._file.in_step() or self._step != self._file.current_step():
+                msg = "Trying to access non-current step in streaming mode"
+                raise ValueError(msg)
             data = self._file._read(self._name)
 
         return data.astype(dtype)

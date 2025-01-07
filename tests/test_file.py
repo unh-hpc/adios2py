@@ -359,3 +359,20 @@ def test_Step_getitem(test2_file, mode):
                     len(ref_data)
             else:
                 assert len(data) == len(ref_data)
+
+
+@pytest.mark.parametrize("mode", ["r", "rra"])
+def test_Step_stale(test2_file, mode):
+    file = adios2py.File(test2_file, mode=mode)
+    steps = list(file.steps)
+
+    for n, step in enumerate(steps):
+        for name, ref_data in sample_data.items():
+            data = step[name]
+            assert data.dtype == ref_data.dtype
+            assert data.shape == ref_data.shape
+            if mode == "r":
+                with pytest.raises(ValueError, match="non-current step"):
+                    assert np.all(data == ref_data + n)
+            else:
+                assert np.all(data == ref_data + n)
