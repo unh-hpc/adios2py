@@ -456,7 +456,6 @@ def test_File_getitem_time_slice2(test2_file):
         (sample_data["test_float_1d"], sample_data["test_float_1d"] + 1), axis=0
     )
     ref_data = ref_data[0:2, 1:3]
-    print(ref_data)
     data = file["test_float_1d"][0:2, 1:3]
     assert data.ndim == ref_data.ndim
     assert data.size == data.size

@@ -14,13 +14,13 @@ class ArrayProxy:
     def __init__(
         self,
         file: File,
-        step: int | None,
+        step: SupportsIndex | slice,
         name: str,
         dtype: np.dtype[Any],
         shape: tuple[int, ...],
     ) -> None:
         self._file = file
-        self._step = slice(step, step + 1) if step is not None else None
+        self._step = step
         self._name = name
         self._dtype = dtype
         self._shape = shape
@@ -64,13 +64,9 @@ class ArrayProxy:
         if not isinstance(key, tuple):
             key = (key,)
 
-        if self._step is not None:
-            key = (self._step, *key)
-
         return self._getitem(key)
 
     def __array__(self, dtype: Any = None) -> NDArray[Any]:
-        assert isinstance(self._step, slice)
         data = self._getitem((self._step,))
         return data.astype(dtype)
 
@@ -80,15 +76,15 @@ class ArrayProxy:
     ) -> NDArray[Any]:
         assert isinstance(key, tuple)
         assert len(key) > 0
-        step, *rem = key
+        step, *rem_list = key
+        rem = tuple(rem_list)
+        assert isinstance(step, SupportsIndex | slice)
 
-        if isinstance(step, SupportsIndex):
-            data = self._file._read(self._name, step=step)
+        if not isinstance(step, SupportsIndex):
+            rem = (slice(None), *rem)
 
-            return data[tuple(rem)] if rem else data
+        data = self._file._read(self._name, step=step)
 
-        if isinstance(step, slice):
-            data = self._file._read(self._name, step=step)
-            return data[(slice(None), *rem)]
+        return data[tuple(rem)] if rem else data
 
         raise NotImplementedError()

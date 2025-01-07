@@ -144,8 +144,8 @@ class File:
             msg = f"Variable {name} not found."
             raise KeyError(msg)
         dtype = np.dtype(util.adios2_to_dtype(var.Type()))
-        shape = tuple(var.Shape())
-        return ArrayProxy(self, step=None, name=name, dtype=dtype, shape=shape)
+        shape = (self._steps, *var.Shape())
+        return ArrayProxy(self, step=slice(None), name=name, dtype=dtype, shape=shape)
 
     def current_step(self) -> int:
         assert self.in_step()
