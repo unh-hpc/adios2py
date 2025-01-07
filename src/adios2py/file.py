@@ -144,7 +144,7 @@ class File:
             msg = f"Variable {name} not found."
             raise KeyError(msg)
         dtype = np.dtype(util.adios2_to_dtype(var.Type()))
-        shape = (self._steps, *var.Shape())
+        shape = (self._steps(), *var.Shape())
         return ArrayProxy(self, step=slice(None), name=name, dtype=dtype, shape=shape)
 
     def current_step(self) -> int:

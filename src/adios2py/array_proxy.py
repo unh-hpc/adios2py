@@ -26,7 +26,7 @@ class ArrayProxy:
         self._shape = shape
 
     def __repr__(self) -> str:
-        return f"ArrayProxy({self._name})"
+        return f"ArrayProxy(name={self._name}, shape={self.shape}, dtype={self.dtype})"
 
     @property
     def dtype(self) -> np.dtype[Any]:
@@ -52,8 +52,7 @@ class ArrayProxy:
         return self.shape[0]
 
     def __array__(self, dtype: Any = None) -> NDArray[Any]:
-        data = self[(self._step,)]
-        return data.astype(dtype)
+        return self[...].astype(dtype)
 
     def __getitem__(
         self,
@@ -68,8 +67,12 @@ class ArrayProxy:
         if not isinstance(key, tuple):
             key = (key,)
         assert len(key) > 0
+        if key == (Ellipsis,):
+            key = (slice(None), Ellipsis)
+
         step, *rem_list = key
         rem = tuple(rem_list)
+
         assert isinstance(step, SupportsIndex | slice)
 
         if not isinstance(step, SupportsIndex):
