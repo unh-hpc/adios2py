@@ -6,7 +6,7 @@ from typing import Any, Generator, Iterable, Iterator
 
 import adios2.bindings as adios2bindings  # type: ignore[import-untyped]
 import numpy as np
-from numpy.typing import ArrayLike
+from numpy.typing import ArrayLike, NDArray
 
 from adios2py import util
 from adios2py.step import Step
@@ -78,7 +78,7 @@ class File:
 
     def _read(
         self, name: str, step_selection: tuple[int, int] | None = None
-    ) -> np.ndarray[Any, Any]:
+    ) -> NDArray[Any]:
         """Read a variable from the file."""
         var = self.io.InquireVariable(name)
         if not var:
