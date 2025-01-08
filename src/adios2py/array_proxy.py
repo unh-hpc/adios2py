@@ -57,6 +57,9 @@ class ArrayProxy:
     def ndim(self) -> int:
         return len(self.shape)
 
+    def __bool__(self) -> bool:
+        return bool(self._file)
+
     def __len__(self) -> int:
         if self.ndim == 0:
             msg = "len() of unsized object"
