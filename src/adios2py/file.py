@@ -94,6 +94,14 @@ class File(Mapping[str, ArrayLike]):
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         self.close()
 
+    @property
+    def parameters(self) -> Mapping[str, str]:
+        return self.io.Parameters()  # type: ignore[no-any-return]
+
+    @property
+    def engine_type(self) -> str:
+        return self.io.EngineType()  # type: ignore[no-any-return]
+
     def _read(
         self, name: str, index: tuple[SupportsIndex | slice | EllipsisType | None, ...]
     ) -> NDArray[Any]:
