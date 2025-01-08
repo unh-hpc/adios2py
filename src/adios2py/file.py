@@ -18,7 +18,7 @@ from adios2py.attrs_proxy import AttrsProxy
 from adios2py.step import Step
 
 
-class File:
+class File(Mapping[str, ArrayLike]):
     """
     Represents an ADIOS2 File or Stream.
     """
@@ -187,6 +187,12 @@ class File:
         dtype = np.dtype(util.adios2_to_dtype(var.Type()))
         shape = (self._steps(), *var.Shape())
         return ArrayProxy(self, step=slice(None), name=name, dtype=dtype, shape=shape)
+
+    def __iter__(self) -> Iterator[str]:
+        yield from self._available_variables().keys()
+
+    def __len__(self) -> int:
+        return len(self._available_variables())
 
     def current_step(self) -> int:
         assert self.in_step()

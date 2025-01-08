@@ -466,6 +466,11 @@ def test_File_getitem_time_slice2(test2_file):
     assert np.all(data == ref_data)
 
 
+def test_File_Mapping(test2_file):
+    file = adios2py.File(test2_file, mode="rra")
+    assert set(file) == set(sample_data)
+
+
 def test_File_getitem_time_all(test2_file):
     file = adios2py.File(test2_file, mode="rra")
     ref_data = np.stack(

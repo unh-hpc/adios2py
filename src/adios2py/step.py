@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterator, KeysView, Mapping
+from collections.abc import Iterator, Mapping
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -28,10 +28,10 @@ class Step(Mapping[str, ArrayProxy]):
         self._file._write(name, data)  # pylint: disable=W0212
 
     def __len__(self) -> int:
-        return len(self._keys())
+        return len(self._file._available_variables())
 
     def __iter__(self) -> Iterator[str]:
-        yield from self._keys()
+        yield from self._file._available_variables().keys()
 
     def __getitem__(self, name: str) -> ArrayProxy:
         var = self._file.io.InquireVariable(name)
@@ -44,6 +44,3 @@ class Step(Mapping[str, ArrayProxy]):
 
     def __setitem__(self, name: str, data: ArrayLike) -> None:
         self._write(name, data)
-
-    def _keys(self) -> KeysView[str]:
-        return self._file._available_variables().keys()
