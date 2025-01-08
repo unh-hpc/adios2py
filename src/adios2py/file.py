@@ -213,8 +213,12 @@ class File:
 
 
 class StepsProxy(Iterable[Step]):
-    def __init__(self, File: File) -> None:
-        self._file = File
+    """
+    Implements File.steps to provide an iterable interface to Steps.
+    """
+
+    def __init__(self, file: File) -> None:
+        self._file = file
 
     def __iter__(self) -> Iterator[Step]:
         try:
@@ -231,9 +235,9 @@ class StepsProxy(Iterable[Step]):
 
     @contextlib.contextmanager
     def next(self) -> Generator[Step]:
-        self._file._begin_step()
+        self._file._begin_step()  # pylint: disable=W0212
         yield Step(self._file)
-        self._file._end_step()
+        self._file._end_step()  # pylint: disable=W0212
 
     def __getitem__(self, index: int) -> Step:
         if self._file._mode != "rra":

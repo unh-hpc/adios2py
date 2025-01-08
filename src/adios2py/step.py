@@ -25,7 +25,7 @@ class Step(Mapping[str, ArrayProxy]):
         self._step = step
 
     def write(self, name: str, data: NDArray[Any]) -> None:
-        self._file._write(name, data)
+        self._file._write(name, data)  # pylint: disable=W0212
 
     def __len__(self) -> int:
         return len(self._keys())

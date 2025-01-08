@@ -11,6 +11,13 @@ if TYPE_CHECKING:
 
 
 class ArrayProxy:
+    """
+    Represents an array-like interface to an ADIOS2 variable.
+
+    Actual loading of the data happens lazily as the data is accessed via slicing or
+    .__array__().
+    """
+
     def __init__(
         self,
         file: File,
