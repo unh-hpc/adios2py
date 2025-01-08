@@ -9,7 +9,7 @@ authors = [{ name = "Kai Germaschewski", email = "kai.germaschewski@unh.edu" }]
 description = "A pythonic interface to the ADIOS2 I/O library"
 readme = "README.md"
 license.file = "LICENSE"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 classifiers = [
   "Development Status :: 1 - Planning",
   "Intended Audience :: Science/Research",
