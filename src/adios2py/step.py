@@ -34,9 +34,6 @@ class Step(Mapping[str, ArrayProxy]):
         yield from self._keys()
 
     def __getitem__(self, name: str) -> ArrayProxy:
-        if self._file._mode not in ("r", "rra"):
-            msg = f"Cannot read variables in mode {self._file._mode}."
-            raise ValueError(msg)
         var = self._file.io.InquireVariable(name)
         if not var:
             msg = f"Variable {name} not found."

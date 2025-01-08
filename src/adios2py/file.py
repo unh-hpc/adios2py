@@ -164,9 +164,6 @@ class File:
 
     def __getitem__(self, name: str) -> ArrayProxy:
         """Read a variable from the file."""
-        if self._mode not in ("r", "rra"):
-            msg = f"Cannot read variables in mode {self._mode}."
-            raise ValueError(msg)
         var = self.io.InquireVariable(name)
         if not var:
             msg = f"Variable {name} not found."

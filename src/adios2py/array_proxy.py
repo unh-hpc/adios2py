@@ -74,6 +74,10 @@ class ArrayProxy:
             | tuple[None | slice | ellipsis | SupportsIndex, ...]
         ),
     ) -> NDArray[Any]:
+        if self._file._mode not in ("r", "rra"):
+            msg = f"Cannot read variables in mode {self._file._mode}."
+            raise ValueError(msg)
+
         if not isinstance(index, tuple):
             index = (index,)
         if index in ((), (Ellipsis,)):
