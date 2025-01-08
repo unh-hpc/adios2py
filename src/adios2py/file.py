@@ -4,8 +4,9 @@ import contextlib
 import itertools
 import operator
 import os
+from collections.abc import Generator, Iterable, Iterator
 from types import EllipsisType
-from typing import Any, Generator, Iterable, Iterator, SupportsIndex
+from typing import Any, SupportsIndex
 
 import adios2.bindings as adios2bindings  # type: ignore[import-untyped]
 import numpy as np
@@ -125,7 +126,7 @@ class File:
             else:
                 raise NotImplementedError()
 
-        sel_start, sel_count = zip(*sel)
+        sel_start, sel_count = zip(*sel, strict=False)
         if self._mode == "rra":
             var.SetStepSelection(sel[0])
         else:  # streaming mode  # noqa: PLR5501

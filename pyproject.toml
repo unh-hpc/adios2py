@@ -9,7 +9,7 @@ authors = [{ name = "Kai Germaschewski", email = "kai.germaschewski@unh.edu" }]
 description = "A pythonic interface to the ADIOS2 I/O library"
 readme = "README.md"
 license.file = "LICENSE"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 classifiers = [
   "Development Status :: 1 - Planning",
   "Intended Audience :: Science/Research",
@@ -110,6 +110,7 @@ ignore = [
   "PLR09",   # Too many <...>
   "PLR2004", # Magic value used in comparison
   "ISC001",  # Conflicts with formatter
+  "UP038",   # Use `X | Y` in `isinstance` call instead of `(X, Y)`
 ]
 isort.required-imports = ["from __future__ import annotations"]
 # Uncomment if using a _compat.typing backport
