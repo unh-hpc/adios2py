@@ -514,9 +514,13 @@ sample_attrs: Mapping[str, ArrayLike] = {
 @pytest.fixture
 def attr_file(tmp_path):
     filename = tmp_path / "test_attrs.bp"
-    with adios2py.File(filename, "w") as file:
-        for name, data in sample_attrs.items():
-            file._write_attribute(name, data)
+    with adios2py.File(filename, "w") as file:  # noqa: SIM117
+        with file.steps.next():
+            for name, data in sample_attrs.items():
+                file._write_attribute(name, data)
+
+            file._write("var1", np.arange(12).reshape(3, 4))
+            file._write_attribute("var1_attr", 77, variable="var1")
 
     return filename
 
@@ -533,3 +537,11 @@ def test_attrs_read(attr_file):
         assert len(file.attrs) == len(sample_attrs)
         for name, ref_data in sample_attrs.items():
             assert np.all(file.attrs[name] == ref_data)
+
+
+def test_var_attrs_read(attr_file):
+    with adios2py.File(attr_file, "rra") as file:
+        var = file.steps[0]["var1"]
+        assert len(var.attrs) == 1
+        assert var.attrs.keys() == set({"var1_attr"})
+        assert var.attrs["var1_attr"] == 77

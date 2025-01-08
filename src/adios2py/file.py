@@ -208,14 +208,19 @@ class File:
     def _steps(self) -> int:
         return self.engine.Steps()  # type: ignore[no-any-return]
 
-    def _write_attribute(self, name: str, data: ArrayLike) -> None:
-        if isinstance(data, (str, list)):
-            self.io.DefineAttribute(name, data)
-        else:
-            self.io.DefineAttribute(name, np.asarray(data))
+    def _write_attribute(
+        self, name: str, data: ArrayLike, variable: str | None = None
+    ) -> None:
+        kwargs = {"variable_name": variable} if variable is not None else {}
 
-    def _read_attribute(self, name: str) -> ArrayLike:
-        attr = self.io.InquireAttribute(name)
+        if isinstance(data, (str, list)):
+            self.io.DefineAttribute(name, data, **kwargs)
+        else:
+            self.io.DefineAttribute(name, np.asarray(data), **kwargs)
+
+    def _read_attribute(self, name: str, variable: str | None = None) -> ArrayLike:
+        attr_name = f"{variable}/{name}" if variable is not None else name
+        attr = self.io.InquireAttribute(attr_name)
         if not attr:
             msg = "Attribute not found"
             raise KeyError(msg)

@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING, Any, SupportsIndex
 import numpy as np
 from numpy.typing import NDArray
 
+from adios2py.attrs_proxy import AttrsProxy
+
 if TYPE_CHECKING:
     from adios2py.file import File
 
@@ -78,3 +80,7 @@ class ArrayProxy:
             index = (slice(None), Ellipsis)
 
         return self._file._read(self._name, index)
+
+    @property
+    def attrs(self) -> AttrsProxy:
+        return AttrsProxy(self._file, variable=self._name)
