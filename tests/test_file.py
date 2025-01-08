@@ -14,6 +14,7 @@ import adios2py
 sample_data = {
     "test_int_0d": np.array(99),
     "test_float_1d": np.arange(5.0),
+    "test_float32_1d": np.arange(5.0, dtype=np.float32),
     "test_int8_2d": np.arange(12, dtype="int8").reshape(3, 4),
     "test_uint8_1d": np.arange(4, dtype="uint8"),
 }
