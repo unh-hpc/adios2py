@@ -29,13 +29,25 @@ class File:
     _current_step: int = -1
     _in_step: bool = False
 
-    def __init__(self, filename: os.PathLike[Any] | str, mode: str = "rra") -> None:
+    def __init__(
+        self,
+        filename: os.PathLike[Any] | str,
+        mode: str = "rra",
+        parameters: dict[str, str] | None = None,
+        engine_type: str | None = None,
+    ) -> None:
         """Open the file in the specified mode."""
         filename = os.fspath(filename)
         self._mode = mode
         self._adios = adios2bindings.ADIOS()
         self._io_name = "io-adios2py"
         self._io = self._adios.DeclareIO(self._io_name)
+        if parameters is not None:
+            # when used as xarray backend, CachingFileManager needs to pass
+            # something hashable, so convert back to dict
+            self._io.SetParameters(dict(parameters))
+        if engine_type is not None:
+            self._io.SetEngine(engine_type)
         self._engine = self._io.Open(os.fspath(filename), util.openmode_to_adios2(mode))
 
     def __bool__(self) -> bool:

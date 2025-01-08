@@ -566,3 +566,14 @@ def test_var_attrs_read(attr_file):
         assert len(var.attrs) == 1
         assert var.attrs.keys() == set({"var1_attr"})
         assert var.attrs["var1_attr"] == 77
+
+
+def test_open_with_parameters(attr_file):
+    params = {"OpenTimeoutSecs": "15"}
+    with adios2py.File(attr_file, parameters=params) as file:
+        assert file.io.Parameters() == params
+
+
+def test_open_with_engine(attr_file):
+    with adios2py.File(attr_file, engine_type="BP5") as file:
+        assert file.io.EngineType() == "BP5"
