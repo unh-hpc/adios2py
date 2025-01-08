@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import os
-from typing import Any
+from typing import Any, Mapping
 
 import adios2.bindings as ab  # type: ignore[import-untyped]
 import numpy as np
 import pytest
+from numpy.typing import ArrayLike
 
 import adios2py
 
@@ -502,22 +503,25 @@ def test_File_getitem_as_array(test2_file):
 
 # Attributes
 
+sample_attrs: Mapping[str, ArrayLike] = {
+    "attr_int_0d": 88,
+    "attr_float_1d": np.arange(3.0),
+    "attr_string_0d": "test",
+    "attr_string_1d": ["t1", "t2", "t3"],
+}
+
 
 @pytest.fixture
 def attr_file(tmp_path):
     filename = tmp_path / "test_attrs.bp"
     with adios2py.File(filename, "w") as file:
-        file._write_attribute("attr_int_0d", 88)
-        file._write_attribute("attr_float_1d", np.arange(3.0))
-        file._write_attribute("attr_string_0d", "test")
-        file._write_attribute("attr_string_1d", ["t1", "t2", "t3"])
+        for name, data in sample_attrs.items():
+            file._write_attribute(name, data)
 
     return filename
 
 
 def test_attrs_write_read(attr_file):
     with adios2py.File(attr_file, "rra") as file:
-        assert file._read_attribute("attr_int_0d") == 88
-        assert np.all(file._read_attribute("attr_float_1d") == np.arange(3.0))
-        assert file._read_attribute("attr_string_0d") == "test"
-        assert file._read_attribute("attr_string_1d") == ["t1", "t2", "t3"]
+        for name, ref_data in sample_attrs.items():
+            assert np.all(file._read_attribute(name) == ref_data)
