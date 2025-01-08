@@ -13,6 +13,7 @@ from numpy.typing import ArrayLike, NDArray
 
 from adios2py import util
 from adios2py.array_proxy import ArrayProxy
+from adios2py.attrs_proxy import AttrsProxy
 from adios2py.step import Step
 
 
@@ -163,9 +164,6 @@ class File:
 
     def __getitem__(self, name: str) -> ArrayProxy:
         """Read a variable from the file."""
-        if self._mode not in ("r", "rra"):
-            msg = f"Cannot read variables in mode {self._mode}."
-            raise ValueError(msg)
         var = self.io.InquireVariable(name)
         if not var:
             msg = f"Variable {name} not found."
@@ -207,9 +205,37 @@ class File:
     def _steps(self) -> int:
         return self.engine.Steps()  # type: ignore[no-any-return]
 
+    def _write_attribute(
+        self, name: str, data: ArrayLike, variable: str | None = None
+    ) -> None:
+        kwargs = {"variable_name": variable} if variable is not None else {}
+
+        if isinstance(data, (str, list)):
+            self.io.DefineAttribute(name, data, **kwargs)
+        else:
+            self.io.DefineAttribute(name, np.asarray(data), **kwargs)
+
+    def _read_attribute(self, name: str, variable: str | None = None) -> ArrayLike:
+        attr_name = f"{variable}/{name}" if variable is not None else name
+        attr = self.io.InquireAttribute(attr_name)
+        if not attr:
+            msg = "Attribute not found"
+            raise KeyError(msg)
+        if attr.Type() == "string":
+            if attr.SingleValue():
+                return attr.DataString()[0]  # type:ignore[no-any-return]
+
+            return attr.DataString()  # type:ignore[no-any-return]
+
+        return attr.Data()  # type:ignore[no-any-return]
+
     @property
     def steps(self) -> StepsProxy:
         return StepsProxy(self)
+
+    @property
+    def attrs(self) -> AttrsProxy:
+        return AttrsProxy(self)
 
 
 class StepsProxy(Iterable[Step]):

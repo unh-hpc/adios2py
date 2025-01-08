@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import os
-from typing import Any
+from typing import Any, Mapping
 
 import adios2.bindings as ab  # type: ignore[import-untyped]
 import numpy as np
 import pytest
+from numpy.typing import ArrayLike
 
 import adios2py
 
@@ -176,7 +177,7 @@ def test_write_test1_file(tmp_path):
     with adios2py.File(filename, "w") as file:  # noqa: SIM117
         with file.steps.next() as step:
             for name, data in sample_data.items():
-                step.write(name, data)
+                step._write(name, data)
 
     check_test1_file_lowlevel(filename)
 
@@ -249,7 +250,7 @@ def test_write_test2_file(tmp_path):
         for n in range(2):
             with file.steps.next() as step:
                 for name, data in sample_data.items():
-                    step.write(name, data + n)
+                    step[name] = data + n
 
     check_test2_file_lowlevel(filename)
 
@@ -498,3 +499,69 @@ def test_File_getitem_as_array(test2_file):
     assert data.shape == ref_data.shape
     assert data.dtype == ref_data.dtype
     assert np.all(data == ref_data)
+
+
+# Attributes
+
+sample_attrs: Mapping[str, ArrayLike] = {
+    "attr_int_0d": 88,
+    "attr_float_1d": np.arange(3.0),
+    "attr_string_0d": "test",
+    "attr_string_1d": ["t1", "t2", "t3"],
+}
+
+
+@pytest.fixture
+def attr_file_lowlevel(tmp_path):
+    filename = tmp_path / "test_attrs.bp"
+    with adios2py.File(filename, "w") as file:  # noqa: SIM117
+        with file.steps.next():
+            for name, data in sample_attrs.items():
+                file._write_attribute(name, data)
+
+            file._write("var1", np.arange(12).reshape(3, 4))
+            file._write_attribute("var1_attr", 77, variable="var1")
+
+    return filename
+
+
+@pytest.fixture
+def attr_file(tmp_path):
+    filename = tmp_path / "test_attrs.bp"
+    with adios2py.File(filename, "w") as file:  # noqa: SIM117
+        with file.steps.next() as step:
+            for name, data in sample_attrs.items():
+                file.attrs[name] = data
+
+            step["var1"] = np.arange(12).reshape(3, 4)
+            step["var1"].attrs["var1_attr"] = 77
+
+    return filename
+
+
+def test_attrs_write_read_lowlevel(attr_file_lowlevel):
+    with adios2py.File(attr_file_lowlevel, "rra") as file:
+        for name, ref_data in sample_attrs.items():
+            assert np.all(file._read_attribute(name) == ref_data)
+
+
+def test_attrs_write_read(attr_file):
+    with adios2py.File(attr_file, "rra") as file:
+        for name, ref_data in sample_attrs.items():
+            assert np.all(file._read_attribute(name) == ref_data)
+
+
+def test_attrs_read(attr_file):
+    with adios2py.File(attr_file, "rra") as file:
+        assert file.attrs.keys() == sample_attrs.keys()
+        assert len(file.attrs) == len(sample_attrs)
+        for name, ref_data in sample_attrs.items():
+            assert np.all(file.attrs[name] == ref_data)
+
+
+def test_var_attrs_read(attr_file):
+    with adios2py.File(attr_file, "rra") as file:
+        var = file.steps[0]["var1"]
+        assert len(var.attrs) == 1
+        assert var.attrs.keys() == set({"var1_attr"})
+        assert var.attrs["var1_attr"] == 77
