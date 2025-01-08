@@ -466,6 +466,26 @@ def test_File_getitem_time_slice2(test2_file):
     assert np.all(data == ref_data)
 
 
+def test_Step_getitem_rra(test2_file):
+    with adios2py.File(test2_file, mode="rra") as file:
+        step = file.steps[1]
+        for name, ref_data in sample_data.items():
+            assert np.all(step[name] == (ref_data + 1))
+            assert np.all(step[name][...] == (ref_data + 1)[...])
+
+
+def test_File_getitem_time_index(test2_file):
+    with adios2py.File(test2_file, mode="rra") as file:
+        for name, ref_data in sample_data.items():
+            assert np.all(file[name][1] == (ref_data + 1))
+
+
+def test_File_getitem_time_slice_1(test2_file):
+    with adios2py.File(test2_file, mode="rra") as file:
+        for name, ref_data in sample_data.items():
+            assert np.all(file[name][1:2] == (ref_data + 1)[np.newaxis])
+
+
 def test_File_Mapping(test2_file):
     file = adios2py.File(test2_file, mode="rra")
     assert set(file) == set(sample_data)

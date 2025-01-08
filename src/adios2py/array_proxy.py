@@ -35,7 +35,7 @@ class ArrayProxy:
         self._shape = shape
 
     def __repr__(self) -> str:
-        return f"ArrayProxy(name={self._name}, shape={self.shape}, dtype={self.dtype})"
+        return f"ArrayProxy(name={self._name}, shape={self.shape}, dtype={self.dtype} step={self._step})"
 
     @property
     def dtype(self) -> np.dtype[Any]:
@@ -61,8 +61,7 @@ class ArrayProxy:
         return self.shape[0]
 
     def __array__(self, dtype: Any = None) -> NDArray[Any]:
-        data = self[(self._step,)]
-        return data.astype(dtype)
+        return self[...].astype(dtype)
 
     def __getitem__(
         self,
@@ -80,6 +79,12 @@ class ArrayProxy:
 
         if not isinstance(index, tuple):
             index = (index,)
+
+        if isinstance(self._step, SupportsIndex):
+            index = (self._step, *index)
+        elif self._step != slice(None):
+            raise NotImplementedError
+
         if index in ((), (Ellipsis,)):
             index = (slice(None), Ellipsis)
 
