@@ -14,19 +14,15 @@ from adios2py.array_proxy import ArrayProxy
 
 
 class Step(Mapping[str, ArrayProxy]):
+    """
+    Represents a step in an ADIOS2 file.
+    """
+
     def __init__(self, file: File, step: int | None = None) -> None:
-        """Represents a step in an ADIOS2 file."""
         self._file = file
         if step is None:
             step = file.current_step()
         self._step = step
-
-    def _read(self, name: str) -> NDArray[Any]:
-        if self._file._mode == "rra":
-            return self._file._read(name, step_selection=(self._step, 1))
-
-        assert self._step == self._file.current_step()
-        return self._file._read(name)
 
     def write(self, name: str, data: NDArray[Any]) -> None:
         self._file._write(name, data)
