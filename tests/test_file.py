@@ -374,7 +374,7 @@ def test_Step_stale(test2_file, mode):
             assert data.dtype == ref_data.dtype
             assert data.shape == ref_data.shape
             if mode == "r":
-                with pytest.raises(ValueError, match="non-current step"):
+                with pytest.raises(IndexError):
                     assert np.all(data == ref_data + n)
             else:
                 assert np.all(data == ref_data + n)
@@ -391,7 +391,7 @@ def test_Array_stale(test2_file, mode):
             assert data.dtype == ref_data.dtype
             assert data.shape == ref_data.shape
             if mode == "r":
-                with pytest.raises(ValueError, match="non-current step"):
+                with pytest.raises(IndexError):
                     assert np.all(data == ref_data + n)
             else:
                 assert np.all(data == ref_data + n)
@@ -425,7 +425,7 @@ def test_File_getitem_r_out_of_order(test2_file):
     file = adios2py.File(test2_file, mode="r")
     for n, _ in enumerate(file.steps):
         for name, _ in sample_data.items():
-            with pytest.raises(ValueError, match="non-current step"):
+            with pytest.raises(IndexError):
                 file[name][n + 1, ...]
 
 

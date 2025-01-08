@@ -144,7 +144,7 @@ class File(Mapping[str, ArrayLike]):
         else:  # streaming mode  # noqa: PLR5501
             if not self.in_step() or sel[0] != (self.current_step(), 1):
                 msg = "Trying to access non-current step in streaming mode"
-                raise ValueError(msg)
+                raise IndexError(msg)
 
         if len(sel) > 1:
             var.SetSelection((sel_start[1:], sel_count[1:]))
