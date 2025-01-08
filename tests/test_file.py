@@ -525,3 +525,11 @@ def test_attrs_write_read(attr_file):
     with adios2py.File(attr_file, "rra") as file:
         for name, ref_data in sample_attrs.items():
             assert np.all(file._read_attribute(name) == ref_data)
+
+
+def test_attrs_read(attr_file):
+    with adios2py.File(attr_file, "rra") as file:
+        assert file.attrs.keys() == sample_attrs.keys()
+        assert len(file.attrs) == len(sample_attrs)
+        for name, ref_data in sample_attrs.items():
+            assert np.all(file.attrs[name] == ref_data)

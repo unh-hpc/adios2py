@@ -13,6 +13,7 @@ from numpy.typing import ArrayLike, NDArray
 
 from adios2py import util
 from adios2py.array_proxy import ArrayProxy
+from adios2py.attrs_proxy import AttrsProxy
 from adios2py.step import Step
 
 
@@ -229,6 +230,10 @@ class File:
     @property
     def steps(self) -> StepsProxy:
         return StepsProxy(self)
+
+    @property
+    def attrs(self) -> AttrsProxy:
+        return AttrsProxy(self)
 
 
 class StepsProxy(Iterable[Step]):
