@@ -177,7 +177,7 @@ def test_write_test1_file(tmp_path):
     with adios2py.File(filename, "w") as file:  # noqa: SIM117
         with file.steps.next() as step:
             for name, data in sample_data.items():
-                step.write(name, data)
+                step._write(name, data)
 
     check_test1_file_lowlevel(filename)
 
@@ -533,7 +533,7 @@ def attr_file(tmp_path):
             for name, data in sample_attrs.items():
                 file.attrs[name] = data
 
-            file._write("var1", np.arange(12).reshape(3, 4))
+            step["var1"] = np.arange(12).reshape(3, 4)
             step["var1"].attrs["var1_attr"] = 77
 
     return filename
