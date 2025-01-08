@@ -275,6 +275,7 @@ def test_test2_read_rra(test2_file):
         step = file.steps[n]
         for name, ref_data in sample_data.items():
             data = step[name]
+            assert data.name == name
             assert data.dtype == ref_data.dtype
             assert data.shape == ref_data.shape
             assert np.all(data == ref_data + n)

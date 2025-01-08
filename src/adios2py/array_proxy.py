@@ -35,7 +35,11 @@ class ArrayProxy:
         self._shape = shape
 
     def __repr__(self) -> str:
-        return f"ArrayProxy(name={self._name}, shape={self.shape}, dtype={self.dtype} step={self._step})"
+        return f"ArrayProxy(name={self._name}, shape={self.shape}, dtype={self.dtype}, step={self._step})"
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     @property
     def dtype(self) -> np.dtype[Any]:
