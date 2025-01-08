@@ -1,12 +1,19 @@
 from __future__ import annotations
 
+import contextlib
+import itertools
+import operator
 import os
-from typing import Any
+from types import EllipsisType
+from typing import Any, Generator, Iterable, Iterator, SupportsIndex
 
 import adios2.bindings as adios2bindings  # type: ignore[import-untyped]
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 from adios2py import util
+from adios2py.array_proxy import ArrayProxy
+from adios2py.step import Step
 
 
 class File:
@@ -17,6 +24,8 @@ class File:
     _io: adios2bindings.IO | None = None
     _engine: adios2bindings.Engine | None = None
     _mode: str = ""
+    _current_step: int = -1
+    _in_step: bool = False
 
     def __init__(self, filename: os.PathLike[Any] | str, mode: str = "rra") -> None:
         """Open the file in the specified mode."""
@@ -71,20 +80,175 @@ class File:
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         self.close()
 
-    def read(self, name: str) -> np.ndarray[Any, Any]:
+    def _read(
+        self, name: str, index: tuple[SupportsIndex | slice | EllipsisType | None, ...]
+    ) -> NDArray[Any]:
         """Read a variable from the file."""
         var = self.io.InquireVariable(name)
         if not var:
             msg = f"Variable '{name}' not found"
             raise ValueError(msg)
+
         dtype = util.adios2_to_dtype(var.Type())
-        shape = tuple(var.Shape())
-        data = np.empty(shape, dtype=dtype)
+
+        var_shape = (self._steps(), *var.Shape())
+        args = list(index)
+        sel: list[tuple[int, int]] = []  # list of (start, count)
+        arr_shape: list[int] = []
+
+        n_ellipses = args.count(Ellipsis)
+        if n_ellipses > 1:
+            msg = "an index can only have a single ellipsis ('...')"
+            raise IndexError(msg)
+        if n_ellipses == 1:  # replace ellipses by corresponding number of full slices
+            i = args.index(Ellipsis)
+            args[i : i + 1] = [slice(None)] * (len(var_shape) - len(args) + 1)
+
+        assert len(args) <= len(var_shape)
+        for arg, length in itertools.zip_longest(args, var_shape):
+            if arg is None:
+                # if too fewer slices/indices were passed, pad with full slices
+                sel.append((0, length))
+                arr_shape.append(length)
+            elif isinstance(arg, slice):
+                start, stop, step = arg.indices(length)
+                assert start < stop
+                assert step == 1
+                sel.append((start, stop - start))
+                arr_shape.append(stop - start)
+            elif isinstance(arg, SupportsIndex):
+                idx = operator.index(arg)
+                if idx < 0:
+                    idx += length
+                sel.append((idx, 1))
+            else:
+                raise NotImplementedError()
+
+        sel_start, sel_count = zip(*sel)
+        if self._mode == "rra":
+            var.SetStepSelection(sel[0])
+        else:  # streaming mode  # noqa: PLR5501
+            if not self.in_step() or sel[0] != (self.current_step(), 1):
+                msg = "Trying to access non-current step in streaming mode"
+                raise ValueError(msg)
+
+        if len(sel) > 1:
+            var.SetSelection((sel_start[1:], sel_count[1:]))
+
+        data = np.empty(arr_shape, dtype=dtype)
         self.engine.Get(var, data, adios2bindings.Mode.Sync)
+
         return data
 
-    def write(self, name: str, data: np.ndarray[Any, Any]) -> None:
-        var = self.io.DefineVariable(
-            name, data, data.shape, [0] * data.ndim, data.shape
-        )
-        self.engine.Put(var, np.asarray(data), adios2bindings.Mode.Sync)
+    def _write(self, name: str, data: ArrayLike) -> None:
+        """Write a variable to the file."""
+        if not self.in_step():
+            msg = "Data needs to be written inside an active step."
+            raise ValueError(msg)
+
+        data = np.asarray(data)
+        var = self.io.InquireVariable(name)
+        if not var:
+            var = self.io.DefineVariable(
+                name,
+                data,
+                data.shape,
+                [0] * data.ndim,
+                data.shape,
+                isConstantDims=True,
+            )
+        # don't allow for changing variable shape
+        assert tuple(var.Shape()) == data.shape
+        self.engine.Put(var, data, adios2bindings.Mode.Sync)
+
+    def __getitem__(self, name: str) -> ArrayProxy:
+        """Read a variable from the file."""
+        if self._mode not in ("r", "rra"):
+            msg = f"Cannot read variables in mode {self._mode}."
+            raise ValueError(msg)
+        var = self.io.InquireVariable(name)
+        if not var:
+            msg = f"Variable {name} not found."
+            raise KeyError(msg)
+        dtype = np.dtype(util.adios2_to_dtype(var.Type()))
+        shape = (self._steps(), *var.Shape())
+        return ArrayProxy(self, step=slice(None), name=name, dtype=dtype, shape=shape)
+
+    def current_step(self) -> int:
+        assert self.in_step()
+        return self._current_step
+
+    def in_step(self) -> bool:
+        return self._in_step
+
+    def _begin_step(self) -> None:
+        assert not self.in_step()
+        if self._mode == "rra":
+            if self._current_step >= self._steps() - 1:
+                raise EOFError()
+            self._current_step = self._current_step + 1
+        else:
+            status = self.engine.BeginStep()
+            if status == adios2bindings.StepStatus.EndOfStream:
+                msg = "End of stream"
+                raise EOFError(msg)
+            if status != adios2bindings.StepStatus.OK:
+                msg = f"BeginStep failed with status {status}"
+                raise RuntimeError(msg)
+            self._current_step = self.engine.CurrentStep()
+        self._in_step = True
+
+    def _end_step(self) -> None:
+        assert self.in_step()
+        if self._mode != "rra":
+            self.engine.EndStep()
+        self._in_step = False
+
+    def _steps(self) -> int:
+        return self.engine.Steps()  # type: ignore[no-any-return]
+
+    @property
+    def steps(self) -> StepsProxy:
+        return StepsProxy(self)
+
+
+class StepsProxy(Iterable[Step]):
+    """
+    Implements File.steps to provide an iterable interface to Steps.
+    """
+
+    def __init__(self, file: File) -> None:
+        self._file = file
+
+    def __iter__(self) -> Iterator[Step]:
+        try:
+            while True:
+                try:
+                    self._file._begin_step()
+                except EOFError:
+                    break
+                yield Step(self._file)
+                self._file._end_step()
+        finally:
+            if self._file.in_step():
+                self._file._end_step()
+
+    @contextlib.contextmanager
+    def next(self) -> Generator[Step]:
+        self._file._begin_step()  # pylint: disable=W0212
+        yield Step(self._file)
+        self._file._end_step()  # pylint: disable=W0212
+
+    def __getitem__(self, index: int) -> Step:
+        if self._file._mode != "rra":
+            msg = "Selecting steps by index is only supported in 'rra' mode"
+            raise IndexError(msg)
+
+        if index < 0 or index >= len(self):
+            msg = "Index out of range"
+            raise IndexError(msg)
+
+        return Step(self._file, index)
+
+    def __len__(self) -> int:
+        return self._file._steps()
