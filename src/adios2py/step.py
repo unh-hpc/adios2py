@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike
 
 if TYPE_CHECKING:
     from adios2py.file import File
@@ -24,7 +24,7 @@ class Step(Mapping[str, ArrayProxy]):
             step = file.current_step()
         self._step = step
 
-    def write(self, name: str, data: NDArray[Any]) -> None:
+    def write(self, name: str, data: ArrayLike) -> None:
         self._file._write(name, data)  # pylint: disable=W0212
 
     def __len__(self) -> int:
@@ -41,6 +41,9 @@ class Step(Mapping[str, ArrayProxy]):
         dtype = np.dtype(util.adios2_to_dtype(var.Type()))
         shape = tuple(var.Shape())
         return ArrayProxy(self._file, self._step, name, dtype, shape)
+
+    def __setitem__(self, name: str, data: ArrayLike) -> None:
+        self.write(name, data)
 
     def _keys(self) -> set[str]:
         return self._file.io.AvailableVariables()  # type: ignore[no-any-return]

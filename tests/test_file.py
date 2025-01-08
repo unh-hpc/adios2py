@@ -250,7 +250,7 @@ def test_write_test2_file(tmp_path):
         for n in range(2):
             with file.steps.next() as step:
                 for name, data in sample_data.items():
-                    step.write(name, data + n)
+                    step[name] = data + n
 
     check_test2_file_lowlevel(filename)
 
