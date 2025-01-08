@@ -503,7 +503,8 @@ def test_File_getitem_as_array(test2_file):
 # Attributes
 
 
-def test_attrs_write_read(tmp_path):
+@pytest.fixture
+def attr_file(tmp_path):
     filename = tmp_path / "test_attrs.bp"
     with adios2py.File(filename, "w") as file:
         file._write_attribute("attr_int_0d", 88)
@@ -511,7 +512,11 @@ def test_attrs_write_read(tmp_path):
         file._write_attribute("attr_string_0d", "test")
         file._write_attribute("attr_string_1d", ["t1", "t2", "t3"])
 
-    with adios2py.File(filename, "rra") as file:
+    return filename
+
+
+def test_attrs_write_read(attr_file):
+    with adios2py.File(attr_file, "rra") as file:
         assert file._read_attribute("attr_int_0d") == 88
         assert np.all(file._read_attribute("attr_float_1d") == np.arange(3.0))
         assert file._read_attribute("attr_string_0d") == "test"
