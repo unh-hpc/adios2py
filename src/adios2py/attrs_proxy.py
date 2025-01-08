@@ -9,6 +9,10 @@ if TYPE_CHECKING:
 
 
 class AttrsProxy(Mapping[str, Any]):
+    """
+    Implements a proxy for the .attrs interface to read/write attributes
+    """
+
     def __init__(self, file: File, variable: str | None = None) -> None:
         self._file = file
         self._variable = variable
