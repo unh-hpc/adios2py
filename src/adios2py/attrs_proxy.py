@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Iterator, Mapping
+from collections.abc import Iterator, Mapping
+from typing import TYPE_CHECKING, Any
 
 from numpy.typing import ArrayLike
 

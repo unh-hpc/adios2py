@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 import adios2.bindings as ab  # type: ignore[import-untyped]
 import numpy as np
