@@ -4,7 +4,7 @@ import contextlib
 import itertools
 import operator
 import os
-from collections.abc import Generator, Iterable, Iterator
+from collections.abc import Generator, Iterable, Iterator, Mapping
 from types import EllipsisType
 from typing import Any, SupportsIndex
 
@@ -174,6 +174,9 @@ class File:
         # don't allow for changing variable shape
         assert tuple(var.Shape()) == data.shape
         self.engine.Put(var, data, adios2bindings.Mode.Sync)
+
+    def _available_variables(self) -> Mapping[str, Any]:
+        return self.io.AvailableVariables()  # type: ignore[no-any-return]
 
     def __getitem__(self, name: str) -> ArrayProxy:
         """Read a variable from the file."""
