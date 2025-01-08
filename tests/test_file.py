@@ -250,6 +250,7 @@ def test_write_test2_file(tmp_path):
     with adios2py.File(filename, "w") as file:
         for n in range(2):
             with file.steps.next() as step:
+                assert step.step() == n
                 for name, data in sample_data.items():
                     step[name] = data + n
 

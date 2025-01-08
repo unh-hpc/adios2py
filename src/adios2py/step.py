@@ -44,3 +44,6 @@ class Step(Mapping[str, ArrayProxy]):
 
     def __setitem__(self, name: str, data: ArrayLike) -> None:
         self._write(name, data)
+
+    def step(self) -> int:
+        return self._step
