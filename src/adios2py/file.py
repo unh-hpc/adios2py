@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import itertools
 import operator
 import os
 from types import EllipsisType
@@ -89,38 +90,55 @@ class File:
             raise ValueError(msg)
 
         dtype = util.adios2_to_dtype(var.Type())
-        shape = tuple(var.Shape())
 
-        step, *rem_list = index
-        rem = tuple(rem_list)
+        var_shape = (self._steps(), *var.Shape())
+        args = list(index)
+        sel: list[tuple[int, int]] = []  # list of (start, count)
+        arr_shape: list[int] = []
 
-        assert isinstance(step, SupportsIndex | slice)
+        n_ellipses = args.count(Ellipsis)
+        if n_ellipses > 1:
+            msg = "an index can only have a single ellipsis ('...')"
+            raise IndexError(msg)
+        if n_ellipses == 1:  # replace ellipses by corresponding number of full slices
+            i = args.index(Ellipsis)
+            args[i : i + 1] = [slice(None)] * (len(var_shape) - len(args) + 1)
 
-        if not isinstance(step, SupportsIndex):
-            rem = (slice(None), *rem)
-
-        if isinstance(step, SupportsIndex):
-            step_selection = (operator.index(step), 1)
-        elif isinstance(step, slice):
-            start, stop, _step = step.indices(self._steps())
-            if _step != 1:
+        assert len(args) <= len(var_shape)
+        for arg, length in itertools.zip_longest(args, var_shape):
+            if arg is None:
+                # if too fewer slices/indices were passed, pad with full slices
+                sel.append((0, length))
+                arr_shape.append(length)
+            elif isinstance(arg, slice):
+                start, stop, step = arg.indices(length)
+                assert start < stop
+                assert step == 1
+                sel.append((start, stop - start))
+                arr_shape.append(stop - start)
+            elif isinstance(arg, SupportsIndex):
+                idx = operator.index(arg)
+                if idx < 0:
+                    idx += length
+                sel.append((idx, 1))
+            else:
                 raise NotImplementedError()
-            step_selection = (start, stop - start)
-            shape = (stop - start, *shape)
-        else:
-            raise NotImplementedError()
 
+        sel_start, sel_count = zip(*sel)
         if self._mode == "rra":
-            var.SetStepSelection(step_selection)
+            var.SetStepSelection(sel[0])
         else:  # streaming mode  # noqa: PLR5501
-            if not self.in_step() or step_selection != (self.current_step(), 1):
+            if not self.in_step() or sel[0] != (self.current_step(), 1):
                 msg = "Trying to access non-current step in streaming mode"
                 raise ValueError(msg)
 
-        data = np.empty(shape, dtype=dtype)
+        if len(sel) > 1:
+            var.SetSelection((sel_start[1:], sel_count[1:]))
+
+        data = np.empty(arr_shape, dtype=dtype)
         self.engine.Get(var, data, adios2bindings.Mode.Sync)
 
-        return data[tuple(rem)] if rem else data
+        return data
 
     def _write(self, name: str, data: ArrayLike) -> None:
         """Write a variable to the file."""
