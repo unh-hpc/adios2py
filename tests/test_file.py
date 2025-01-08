@@ -498,3 +498,21 @@ def test_File_getitem_as_array(test2_file):
     assert data.shape == ref_data.shape
     assert data.dtype == ref_data.dtype
     assert np.all(data == ref_data)
+
+
+# Attributes
+
+
+def test_attrs_write_read(tmp_path):
+    filename = tmp_path / "test_attrs.bp"
+    with adios2py.File(filename, "w") as file:
+        file._write_attribute("attr_int_0d", 88)
+        file._write_attribute("attr_float_1d", np.arange(3.0))
+        file._write_attribute("attr_string_0d", "test")
+        file._write_attribute("attr_string_1d", ["t1", "t2", "t3"])
+
+    with adios2py.File(filename, "rra") as file:
+        assert file._read_attribute("attr_int_0d") == 88
+        assert np.all(file._read_attribute("attr_float_1d") == np.arange(3.0))
+        assert file._read_attribute("attr_string_0d") == "test"
+        assert file._read_attribute("attr_string_1d") == ["t1", "t2", "t3"]

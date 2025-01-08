@@ -207,6 +207,25 @@ class File:
     def _steps(self) -> int:
         return self.engine.Steps()  # type: ignore[no-any-return]
 
+    def _write_attribute(self, name: str, data: ArrayLike) -> None:
+        if isinstance(data, (str, list)):
+            self.io.DefineAttribute(name, data)
+        else:
+            self.io.DefineAttribute(name, np.asarray(data))
+
+    def _read_attribute(self, name: str) -> ArrayLike:
+        attr = self.io.InquireAttribute(name)
+        if not attr:
+            msg = "Attribute not found"
+            raise KeyError(msg)
+        if attr.Type() == "string":
+            if attr.SingleValue():
+                return attr.DataString()[0]  # type:ignore[no-any-return]
+
+            return attr.DataString()  # type:ignore[no-any-return]
+
+        return attr.Data()  # type:ignore[no-any-return]
+
     @property
     def steps(self) -> StepsProxy:
         return StepsProxy(self)
