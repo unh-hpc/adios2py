@@ -9,9 +9,11 @@ from __future__ import annotations
 from . import util
 from ._version import version as __version__
 from .file import File
+from .group import Group
 
 __all__ = [
     "File",
+    "Group",
     "__version__",
     "util",
 ]
