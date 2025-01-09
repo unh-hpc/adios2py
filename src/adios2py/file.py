@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools
 import operator
 import os
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from types import EllipsisType
 from typing import Any, SupportsIndex
 
@@ -12,7 +12,6 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from adios2py import util
-from adios2py.array_proxy import ArrayProxy
 from adios2py.attrs_proxy import AttrsProxy
 from adios2py.group import Group
 from adios2py.steps_proxy import StepsProxy
@@ -49,6 +48,7 @@ class File(Group):
         if engine_type is not None:
             self._io.SetEngine(engine_type)
         self._engine = self._io.Open(os.fspath(filename), util.openmode_to_adios2(mode))
+        super().__init__(self)
 
     def __bool__(self) -> bool:
         """Returns True if the file is open."""
@@ -185,22 +185,6 @@ class File(Group):
 
     def _available_variables(self) -> Mapping[str, Any]:
         return self.io.AvailableVariables()  # type: ignore[no-any-return]
-
-    def __getitem__(self, name: str) -> ArrayProxy:
-        """Read a variable from the file."""
-        var = self.io.InquireVariable(name)
-        if not var:
-            msg = f"Variable {name} not found."
-            raise KeyError(msg)
-        dtype = np.dtype(util.adios2_to_dtype(var.Type()))
-        shape = (self._steps(), *var.Shape())
-        return ArrayProxy(self, step=slice(None), name=name, dtype=dtype, shape=shape)
-
-    def __iter__(self) -> Iterator[str]:
-        yield from self._available_variables().keys()
-
-    def __len__(self) -> int:
-        return len(self._available_variables())
 
     def current_step(self) -> int:
         assert self.in_step()
