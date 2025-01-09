@@ -14,6 +14,12 @@ if TYPE_CHECKING:
 
 
 class Group(Mapping[str, ArrayProxy]):
+    """
+    Base class for File and Step
+
+    A Group provides dict-like read access to variables and attributes.
+    """
+
     def __init__(self, file: File, step: int | None = None) -> None:
         self._file = file
         self._step = step
