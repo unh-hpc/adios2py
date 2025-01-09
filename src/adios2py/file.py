@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import contextlib
 import itertools
 import operator
 import os
-from collections.abc import Generator, Iterable, Iterator, Mapping
+from collections.abc import Iterator, Mapping
 from types import EllipsisType
 from typing import Any, SupportsIndex
 
@@ -15,7 +14,7 @@ from numpy.typing import ArrayLike, NDArray
 from adios2py import util
 from adios2py.array_proxy import ArrayProxy
 from adios2py.attrs_proxy import AttrsProxy
-from adios2py.step import Step
+from adios2py.steps_proxy import StepsProxy
 
 
 class File(Mapping[str, ArrayLike]):
@@ -266,45 +265,3 @@ class File(Mapping[str, ArrayLike]):
     @property
     def attrs(self) -> AttrsProxy:
         return AttrsProxy(self)
-
-
-class StepsProxy(Iterable[Step]):
-    """
-    Implements File.steps to provide an iterable interface to Steps.
-    """
-
-    def __init__(self, file: File) -> None:
-        self._file = file
-
-    def __iter__(self) -> Iterator[Step]:
-        try:
-            while True:
-                try:
-                    self._file._begin_step()
-                except EOFError:
-                    break
-                yield Step(self._file)
-                self._file._end_step()
-        finally:
-            if self._file.in_step():
-                self._file._end_step()
-
-    @contextlib.contextmanager
-    def next(self) -> Generator[Step]:
-        self._file._begin_step()  # pylint: disable=W0212
-        yield Step(self._file)
-        self._file._end_step()  # pylint: disable=W0212
-
-    def __getitem__(self, index: int) -> Step:
-        if self._file._mode != "rra":
-            msg = "Selecting steps by index is only supported in 'rra' mode"
-            raise IndexError(msg)
-
-        if index < 0 or index >= len(self):
-            msg = "Index out of range"
-            raise IndexError(msg)
-
-        return Step(self._file, index)
-
-    def __len__(self) -> int:
-        return self._file._steps()
