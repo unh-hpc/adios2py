@@ -10,11 +10,8 @@ class Step(Group):
     Represents a step in an ADIOS2 file.
     """
 
-    def _write(self, name: str, data: ArrayLike) -> None:
-        self._file._write(name, data)  # pylint: disable=W0212
-
     def __setitem__(self, name: str, data: ArrayLike) -> None:
-        self._write(name, data)
+        self._file._write(name, data)  # pylint: disable=W0212
 
     def step(self) -> int:
         assert isinstance(self._step, int)

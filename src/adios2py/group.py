@@ -4,7 +4,6 @@ from collections.abc import Iterator, Mapping
 from typing import TYPE_CHECKING
 
 import numpy as np
-from numpy.typing import ArrayLike
 
 from adios2py import util
 from adios2py.array_proxy import ArrayProxy
@@ -13,7 +12,7 @@ if TYPE_CHECKING:
     from adios2py.file import File
 
 
-class Group(Mapping[str, ArrayLike]):
+class Group(Mapping[str, ArrayProxy]):
     def __init__(self, file: File, step: int | None = None) -> None:
         self._file = file
         self._step = step

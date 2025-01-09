@@ -179,7 +179,7 @@ def test_write_test1_file(tmp_path):
     with adios2py.File(filename, "w") as file:  # noqa: SIM117
         with file.steps.next() as step:
             for name, data in sample_data.items():
-                step._write(name, data)
+                step._file._write(name, data)
 
     check_test1_file_lowlevel(filename)
 
