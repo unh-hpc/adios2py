@@ -25,7 +25,7 @@ class StepsProxy(Iterable[Step]):
                     self._file._begin_step()
                 except EOFError:
                     break
-                yield Step(self._file)
+                yield Step(self._file, self._file.current_step())
                 self._file._end_step()
         finally:
             if self._file.in_step():
@@ -34,7 +34,7 @@ class StepsProxy(Iterable[Step]):
     @contextlib.contextmanager
     def next(self) -> Generator[Step]:
         self._file._begin_step()  # pylint: disable=W0212
-        yield Step(self._file)
+        yield Step(self._file, self._file.current_step())
         self._file._end_step()  # pylint: disable=W0212
 
     def __getitem__(self, index: int) -> Step:
