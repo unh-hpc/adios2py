@@ -12,7 +12,6 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from adios2py import util
-from adios2py.attrs_proxy import AttrsProxy
 from adios2py.group import Group
 from adios2py.steps_proxy import StepsProxy
 
@@ -250,7 +249,3 @@ class File(Group):
     @property
     def steps(self) -> StepsProxy:
         return StepsProxy(self)
-
-    @property
-    def attrs(self) -> AttrsProxy:
-        return AttrsProxy(self)

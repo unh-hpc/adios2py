@@ -7,6 +7,7 @@ import numpy as np
 
 from adios2py import util
 from adios2py.array_proxy import ArrayProxy
+from adios2py.attrs_proxy import AttrsProxy
 
 if TYPE_CHECKING:
     from adios2py.file import File
@@ -38,3 +39,7 @@ class Group(Mapping[str, ArrayProxy]):
 
         shape = tuple(var.Shape())
         return ArrayProxy(self._file, self._step, name, dtype, shape)
+
+    @property
+    def attrs(self) -> AttrsProxy:
+        return AttrsProxy(self._file)
