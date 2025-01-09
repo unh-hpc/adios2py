@@ -582,7 +582,9 @@ def test_attrs_write_read_lowlevel(attr_file_lowlevel):
 def test_attrs_write_read(attr_file):
     with adios2py.File(attr_file, "rra") as file:
         for name, ref_data in sample_attrs.items():
-            assert np.all(file._read_attribute(name) == ref_data)
+            data = file._read_attribute(name)
+            assert np.asarray(data).shape == np.asarray(ref_data).shape
+            assert np.array_equal(data, ref_data)
 
 
 def test_attrs_read(attr_file):

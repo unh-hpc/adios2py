@@ -238,13 +238,9 @@ class File(Group):
         if not attr:
             msg = "Attribute not found"
             raise KeyError(msg)
-        if attr.Type() == "string":
-            if attr.SingleValue():
-                return attr.DataString()[0]  # type:ignore[no-any-return]
 
-            return attr.DataString()  # type:ignore[no-any-return]
-
-        return attr.Data()  # type:ignore[no-any-return]
+        data = attr.DataString() if attr.Type() == "string" else attr.Data()
+        return data[0] if attr.SingleValue() else data  # type: ignore[no-any-return]
 
     @property
     def steps(self) -> StepsProxy:
