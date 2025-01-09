@@ -137,6 +137,11 @@ def test_File_bool(test1_file):
     assert bool(file)
 
 
+def test_File_filename(test1_file):
+    file = adios2py.File(test1_file)
+    assert file.filename == test1_file
+
+
 def test_File_close(test1_file):
     file = adios2py.File(test1_file)
     assert file

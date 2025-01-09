@@ -36,7 +36,7 @@ class File(Group):
         engine_type: str | None = None,
     ) -> None:
         """Open the file in the specified mode."""
-        filename = os.fspath(filename)
+        self._filename = filename
         self._mode = mode
         self._adios = adios2bindings.ADIOS()
         self._io_name = "io-adios2py"
@@ -53,6 +53,10 @@ class File(Group):
     def __bool__(self) -> bool:
         """Returns True if the file is open."""
         return self._engine is not None and self._io is not None
+
+    @property
+    def filename(self) -> os.PathLike[Any] | str:
+        return self._filename
 
     @property
     def io(self) -> adios2bindings.IO:
