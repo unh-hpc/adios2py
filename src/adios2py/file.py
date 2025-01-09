@@ -225,12 +225,22 @@ class File(Group):
     def _write_attribute(
         self, name: str, data: ArrayLike, variable: str | None = None
     ) -> None:
-        kwargs = {"variable_name": variable} if variable is not None else {}
+        try:
+            attr_data = np.asarray(self._read_attribute(name, variable))
+            is_floating = bool(
+                np.issubdtype(attr_data.dtype, np.floating)
+                or np.issubdtype(attr_data.dtype, np.complexfloating)
+            )
+            if np.array_equal(attr_data, data, equal_nan=is_floating):
+                return  # attribute already exists with same value
+        except KeyError:
+            pass
 
+        variable = "" if variable is None else variable
         if isinstance(data, (str, list)):
-            self.io.DefineAttribute(name, data, **kwargs)
+            self.io.DefineAttribute(name, data, variable)
         else:
-            self.io.DefineAttribute(name, np.asarray(data), **kwargs)
+            self.io.DefineAttribute(name, np.asarray(data), variable)
 
     def _read_attribute(self, name: str, variable: str | None = None) -> ArrayLike:
         attr_name = f"{variable}/{name}" if variable is not None else name

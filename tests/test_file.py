@@ -573,6 +573,18 @@ def attr_file(tmp_path):
     return filename
 
 
+def test_attr_file_multiple(tmp_path):
+    filename = tmp_path / "test_attrs_multiple.bp"
+    with adios2py.File(filename, "w", engine_type="BP4") as file:
+        with file.steps.next():
+            file.attrs["test"] = 33.0
+            file.attrs["testnan"] = np.nan
+
+        with file.steps.next():
+            file.attrs["test"] = 33.0
+            file.attrs["testnan"] = np.nan
+
+
 def test_attrs_write_read_lowlevel(attr_file_lowlevel):
     with adios2py.File(attr_file_lowlevel, "rra") as file:
         for name, ref_data in sample_attrs.items():
