@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -11,9 +11,10 @@ if TYPE_CHECKING:
 
 from adios2py import util
 from adios2py.array_proxy import ArrayProxy
+from adios2py.group import Group
 
 
-class Step(Mapping[str, ArrayProxy]):
+class Step(Group):
     """
     Represents a step in an ADIOS2 file.
     """

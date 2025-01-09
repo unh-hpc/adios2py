@@ -14,10 +14,11 @@ from numpy.typing import ArrayLike, NDArray
 from adios2py import util
 from adios2py.array_proxy import ArrayProxy
 from adios2py.attrs_proxy import AttrsProxy
+from adios2py.group import Group
 from adios2py.steps_proxy import StepsProxy
 
 
-class File(Mapping[str, ArrayLike]):
+class File(Group):
     """
     Represents an ADIOS2 File or Stream.
     """
