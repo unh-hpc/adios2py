@@ -172,6 +172,9 @@ class File(Group):
             raise ValueError(msg)
 
         data = np.asarray(data)
+        if data.ndim != 0:
+            data = np.ascontiguousarray(data)
+
         var = self.io.InquireVariable(name)
         if not var:
             var = self.io.DefineVariable(
