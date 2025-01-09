@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import contextlib
 import itertools
 import operator
 import os
-from collections.abc import Generator, Iterable, Iterator
+from collections.abc import Mapping
 from types import EllipsisType
 from typing import Any, SupportsIndex
 
@@ -13,12 +12,11 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 from adios2py import util
-from adios2py.array_proxy import ArrayProxy
-from adios2py.attrs_proxy import AttrsProxy
-from adios2py.step import Step
+from adios2py.group import Group
+from adios2py.steps_proxy import StepsProxy
 
 
-class File:
+class File(Group):
     """
     Represents an ADIOS2 File or Stream.
     """
@@ -29,18 +27,35 @@ class File:
     _current_step: int = -1
     _in_step: bool = False
 
-    def __init__(self, filename: os.PathLike[Any] | str, mode: str = "rra") -> None:
+    def __init__(
+        self,
+        filename: os.PathLike[Any] | str,
+        mode: str = "rra",
+        parameters: dict[str, str] | None = None,
+        engine_type: str | None = None,
+    ) -> None:
         """Open the file in the specified mode."""
-        filename = os.fspath(filename)
+        self._filename = filename
         self._mode = mode
         self._adios = adios2bindings.ADIOS()
         self._io_name = "io-adios2py"
         self._io = self._adios.DeclareIO(self._io_name)
+        if parameters is not None:
+            # when used as xarray backend, CachingFileManager needs to pass
+            # something hashable, so convert back to dict
+            self._io.SetParameters(dict(parameters))
+        if engine_type is not None:
+            self._io.SetEngine(engine_type)
         self._engine = self._io.Open(os.fspath(filename), util.openmode_to_adios2(mode))
+        super().__init__(self)
 
     def __bool__(self) -> bool:
         """Returns True if the file is open."""
         return self._engine is not None and self._io is not None
+
+    @property
+    def filename(self) -> os.PathLike[Any] | str:
+        return self._filename
 
     @property
     def io(self) -> adios2bindings.IO:
@@ -81,6 +96,14 @@ class File:
 
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
         self.close()
+
+    @property
+    def parameters(self) -> Mapping[str, str]:
+        return self.io.Parameters()  # type: ignore[no-any-return]
+
+    @property
+    def engine_type(self) -> str:
+        return self.io.EngineType()  # type: ignore[no-any-return]
 
     def _read(
         self, name: str, index: tuple[SupportsIndex | slice | EllipsisType | None, ...]
@@ -132,7 +155,7 @@ class File:
         else:  # streaming mode  # noqa: PLR5501
             if not self.in_step() or sel[0] != (self.current_step(), 1):
                 msg = "Trying to access non-current step in streaming mode"
-                raise ValueError(msg)
+                raise IndexError(msg)
 
         if len(sel) > 1:
             var.SetSelection((sel_start[1:], sel_count[1:]))
@@ -163,15 +186,8 @@ class File:
         assert tuple(var.Shape()) == data.shape
         self.engine.Put(var, data, adios2bindings.Mode.Sync)
 
-    def __getitem__(self, name: str) -> ArrayProxy:
-        """Read a variable from the file."""
-        var = self.io.InquireVariable(name)
-        if not var:
-            msg = f"Variable {name} not found."
-            raise KeyError(msg)
-        dtype = np.dtype(util.adios2_to_dtype(var.Type()))
-        shape = (self._steps(), *var.Shape())
-        return ArrayProxy(self, step=slice(None), name=name, dtype=dtype, shape=shape)
+    def _available_variables(self) -> Mapping[str, Any]:
+        return self.io.AvailableVariables()  # type: ignore[no-any-return]
 
     def current_step(self) -> int:
         assert self.in_step()
@@ -233,49 +249,3 @@ class File:
     @property
     def steps(self) -> StepsProxy:
         return StepsProxy(self)
-
-    @property
-    def attrs(self) -> AttrsProxy:
-        return AttrsProxy(self)
-
-
-class StepsProxy(Iterable[Step]):
-    """
-    Implements File.steps to provide an iterable interface to Steps.
-    """
-
-    def __init__(self, file: File) -> None:
-        self._file = file
-
-    def __iter__(self) -> Iterator[Step]:
-        try:
-            while True:
-                try:
-                    self._file._begin_step()
-                except EOFError:
-                    break
-                yield Step(self._file)
-                self._file._end_step()
-        finally:
-            if self._file.in_step():
-                self._file._end_step()
-
-    @contextlib.contextmanager
-    def next(self) -> Generator[Step]:
-        self._file._begin_step()  # pylint: disable=W0212
-        yield Step(self._file)
-        self._file._end_step()  # pylint: disable=W0212
-
-    def __getitem__(self, index: int) -> Step:
-        if self._file._mode != "rra":
-            msg = "Selecting steps by index is only supported in 'rra' mode"
-            raise IndexError(msg)
-
-        if index < 0 or index >= len(self):
-            msg = "Index out of range"
-            raise IndexError(msg)
-
-        return Step(self._file, index)
-
-    def __len__(self) -> int:
-        return self._file._steps()

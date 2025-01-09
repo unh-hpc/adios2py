@@ -14,6 +14,7 @@ import adios2py
 sample_data = {
     "test_int_0d": np.array(99),
     "test_float_1d": np.arange(5.0),
+    "test_float32_1d": np.arange(5.0, dtype=np.float32),
     "test_int8_2d": np.arange(12, dtype="int8").reshape(3, 4),
     "test_uint8_1d": np.arange(4, dtype="uint8"),
 }
@@ -136,6 +137,11 @@ def test_File_bool(test1_file):
     assert bool(file)
 
 
+def test_File_filename(test1_file):
+    file = adios2py.File(test1_file)
+    assert file.filename == test1_file
+
+
 def test_File_close(test1_file):
     file = adios2py.File(test1_file)
     assert file
@@ -178,7 +184,7 @@ def test_write_test1_file(tmp_path):
     with adios2py.File(filename, "w") as file:  # noqa: SIM117
         with file.steps.next() as step:
             for name, data in sample_data.items():
-                step._write(name, data)
+                step._file._write(name, data)
 
     check_test1_file_lowlevel(filename)
 
@@ -250,6 +256,7 @@ def test_write_test2_file(tmp_path):
     with adios2py.File(filename, "w") as file:
         for n in range(2):
             with file.steps.next() as step:
+                assert step.step() == n
                 for name, data in sample_data.items():
                     step[name] = data + n
 
@@ -274,6 +281,7 @@ def test_test2_read_rra(test2_file):
         step = file.steps[n]
         for name, ref_data in sample_data.items():
             data = step[name]
+            assert data.name == name
             assert data.dtype == ref_data.dtype
             assert data.shape == ref_data.shape
             assert np.all(data == ref_data + n)
@@ -374,7 +382,7 @@ def test_Step_stale(test2_file, mode):
             assert data.dtype == ref_data.dtype
             assert data.shape == ref_data.shape
             if mode == "r":
-                with pytest.raises(ValueError, match="non-current step"):
+                with pytest.raises(IndexError):
                     assert np.all(data == ref_data + n)
             else:
                 assert np.all(data == ref_data + n)
@@ -391,7 +399,7 @@ def test_Array_stale(test2_file, mode):
             assert data.dtype == ref_data.dtype
             assert data.shape == ref_data.shape
             if mode == "r":
-                with pytest.raises(ValueError, match="non-current step"):
+                with pytest.raises(IndexError):
                     assert np.all(data == ref_data + n)
             else:
                 assert np.all(data == ref_data + n)
@@ -425,7 +433,7 @@ def test_File_getitem_r_out_of_order(test2_file):
     file = adios2py.File(test2_file, mode="r")
     for n, _ in enumerate(file.steps):
         for name, _ in sample_data.items():
-            with pytest.raises(ValueError, match="non-current step"):
+            with pytest.raises(IndexError):
                 file[name][n + 1, ...]
 
 
@@ -464,6 +472,31 @@ def test_File_getitem_time_slice2(test2_file):
     assert data.dtype == ref_data.dtype
     assert data.shape == ref_data.shape
     assert np.all(data == ref_data)
+
+
+def test_Step_getitem_rra(test2_file):
+    with adios2py.File(test2_file, mode="rra") as file:
+        step = file.steps[1]
+        for name, ref_data in sample_data.items():
+            assert np.all(step[name] == (ref_data + 1))
+            assert np.all(step[name][...] == (ref_data + 1)[...])
+
+
+def test_File_getitem_time_index(test2_file):
+    with adios2py.File(test2_file, mode="rra") as file:
+        for name, ref_data in sample_data.items():
+            assert np.all(file[name][1] == (ref_data + 1))
+
+
+def test_File_getitem_time_slice_1(test2_file):
+    with adios2py.File(test2_file, mode="rra") as file:
+        for name, ref_data in sample_data.items():
+            assert np.all(file[name][1:2] == (ref_data + 1)[np.newaxis])
+
+
+def test_File_Mapping(test2_file):
+    file = adios2py.File(test2_file, mode="rra")
+    assert set(file) == set(sample_data)
 
 
 def test_File_getitem_time_all(test2_file):
@@ -566,3 +599,14 @@ def test_var_attrs_read(attr_file):
         assert len(var.attrs) == 1
         assert var.attrs.keys() == set({"var1_attr"})
         assert var.attrs["var1_attr"] == 77
+
+
+def test_open_with_parameters(attr_file):
+    params = {"OpenTimeoutSecs": "15"}
+    with adios2py.File(attr_file, parameters=params) as file:
+        assert file.io.Parameters() == params
+
+
+def test_open_with_engine(attr_file):
+    with adios2py.File(attr_file, engine_type="BP5") as file:
+        assert file.io.EngineType() == "BP5"
