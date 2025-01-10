@@ -172,6 +172,9 @@ class File(Group):
             raise ValueError(msg)
 
         data = np.asarray(data)
+        if data.ndim != 0:
+            data = np.ascontiguousarray(data)
+
         var = self.io.InquireVariable(name)
         if not var:
             var = self.io.DefineVariable(
@@ -225,12 +228,22 @@ class File(Group):
     def _write_attribute(
         self, name: str, data: ArrayLike, variable: str | None = None
     ) -> None:
-        kwargs = {"variable_name": variable} if variable is not None else {}
+        try:
+            attr_data = np.asarray(self._read_attribute(name, variable))
+            is_floating = bool(
+                np.issubdtype(attr_data.dtype, np.floating)
+                or np.issubdtype(attr_data.dtype, np.complexfloating)
+            )
+            if np.array_equal(attr_data, data, equal_nan=is_floating):
+                return  # attribute already exists with same value
+        except KeyError:
+            pass
 
+        variable = "" if variable is None else variable
         if isinstance(data, (str, list)):
-            self.io.DefineAttribute(name, data, **kwargs)
+            self.io.DefineAttribute(name, data, variable)
         else:
-            self.io.DefineAttribute(name, np.asarray(data), **kwargs)
+            self.io.DefineAttribute(name, np.asarray(data), variable)
 
     def _read_attribute(self, name: str, variable: str | None = None) -> ArrayLike:
         attr_name = f"{variable}/{name}" if variable is not None else name
@@ -238,13 +251,9 @@ class File(Group):
         if not attr:
             msg = "Attribute not found"
             raise KeyError(msg)
-        if attr.Type() == "string":
-            if attr.SingleValue():
-                return attr.DataString()[0]  # type:ignore[no-any-return]
 
-            return attr.DataString()  # type:ignore[no-any-return]
-
-        return attr.Data()  # type:ignore[no-any-return]
+        data = attr.DataString() if attr.Type() == "string" else attr.Data()
+        return data[0] if attr.SingleValue() else data  # type: ignore[no-any-return]
 
     @property
     def steps(self) -> StepsProxy:
