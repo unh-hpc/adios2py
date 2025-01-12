@@ -624,3 +624,18 @@ def test_open_with_parameters(attr_file):
 def test_open_with_engine(attr_file):
     with adios2py.File(attr_file, engine_type="BP5") as file:
         assert file.io.EngineType() == "BP5"
+
+
+@pytest.mark.parametrize(
+    "engine_type", ["BP3", "BP4", pytest.param("BP5", marks=pytest.mark.xfail())]
+)
+def test_variable_parentheses(tmp_path, engine_type):
+    filename = tmp_path / "test_parentheses.bp"
+    with adios2py.File(filename, "w", engine_type=engine_type) as file:  # noqa: SIM117
+        with file.steps.next() as step:
+            step["test1"] = 5
+            step["test2 (parens)"] = 6
+
+    with adios2py.File(filename, "rra") as file:  # noqa: SIM117
+        with file.steps.next() as step:
+            assert set(step.keys()) == {"test1", "test2 (parens)"}
