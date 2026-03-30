@@ -4,6 +4,7 @@ from collections.abc import Iterator, Mapping
 from typing import TYPE_CHECKING
 
 import adios2  # type: ignore[import-untyped]
+import numpy as np
 
 from adios2py.array_proxy import ArrayProxy
 from adios2py.attrs_proxy import AttrsProxy
@@ -35,7 +36,7 @@ class Group(Mapping[str, ArrayProxy]):
         if not var:
             msg = f"Variable {name} not found."
             raise KeyError(msg)
-        dtype = adios2.type_adios_to_numpy(var.Type())
+        dtype = np.dtype(adios2.type_adios_to_numpy(var.Type()))
         if self._step is None:  # represent all steps as additional dimension
             shape = (self._file._steps(), *var.Shape())
             return ArrayProxy(
