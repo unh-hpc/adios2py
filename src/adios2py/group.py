@@ -3,9 +3,8 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping
 from typing import TYPE_CHECKING
 
-import numpy as np
+import adios2  # type: ignore[import-untyped]
 
-from adios2py import util
 from adios2py.array_proxy import ArrayProxy
 from adios2py.attrs_proxy import AttrsProxy
 
@@ -36,7 +35,7 @@ class Group(Mapping[str, ArrayProxy]):
         if not var:
             msg = f"Variable {name} not found."
             raise KeyError(msg)
-        dtype = np.dtype(util.adios2_to_dtype(var.Type()))
+        dtype = adios2.type_adios_to_numpy(var.Type())
         if self._step is None:  # represent all steps as additional dimension
             shape = (self._file._steps(), *var.Shape())
             return ArrayProxy(

@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from types import EllipsisType
 from typing import Any, SupportsIndex
 
+import adios2  # type: ignore[import-untyped]
 import adios2.bindings as adios2bindings  # type: ignore[import-untyped]
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -114,7 +115,7 @@ class File(Group):
             msg = f"Variable '{name}' not found"
             raise ValueError(msg)
 
-        dtype = util.adios2_to_dtype(var.Type())
+        dtype = adios2.type_adios_to_numpy(var.Type())
 
         var_shape = (self._steps(), *var.Shape())
         args = list(index)

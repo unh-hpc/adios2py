@@ -4,6 +4,7 @@ import os
 from collections.abc import Mapping
 from typing import Any
 
+import adios2  # type: ignore[import-untyped]
 import adios2.bindings as ab  # type: ignore[import-untyped]
 import numpy as np
 import pytest
@@ -47,7 +48,7 @@ def check_test1_file_lowlevel(filename: os.PathLike[Any] | str) -> None:
     for name, ref_data in sample_data.items():
         var = io.InquireVariable(name)
         assert var
-        dtype = adios2py.util.adios2_to_dtype(var.Type())
+        dtype = adios2.type_adios_to_numpy(var.Type())
         assert dtype == ref_data.dtype
         shape = tuple(var.Shape())
         assert shape == ref_data.shape
@@ -230,7 +231,7 @@ def check_test2_file_lowlevel(filename: os.PathLike[Any] | str) -> None:
         for name, ref_data in sample_data.items():
             var = io.InquireVariable(name)
             assert var
-            dtype = adios2py.util.adios2_to_dtype(var.Type())
+            dtype = adios2.type_adios_to_numpy(var.Type())
             assert dtype == ref_data.dtype
             shape = tuple(var.Shape())
             assert shape == ref_data.shape
