@@ -627,9 +627,7 @@ def test_open_with_engine(attr_file):
         assert file.io.EngineType() == "BP5"
 
 
-@pytest.mark.parametrize(
-    "engine_type", ["BP3", "BP4", pytest.param("BP5", marks=pytest.mark.xfail())]
-)
+@pytest.mark.parametrize("engine_type", ["BP3", "BP4", "BP5"])
 def test_variable_parentheses(tmp_path, engine_type):
     filename = tmp_path / "test_parentheses.bp"
     with adios2py.File(filename, "w", engine_type=engine_type) as file:  # noqa: SIM117
