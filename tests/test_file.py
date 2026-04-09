@@ -190,6 +190,19 @@ def test_write_test1_file(tmp_path):
     check_test1_file_lowlevel(filename)
 
 
+def test_write_frozen_array(tmp_path):
+    filename = tmp_path / "test1.bp"
+    with adios2py.File(filename, "w") as file:  # noqa: SIM117
+        with file.steps.next() as step:
+            frozen_arr = np.arange(5.0)
+            frozen_arr.setflags(write=False)
+
+            with pytest.raises(
+                ValueError, match="Data needs to be flagged as writeable"
+            ):
+                step._file._write("frozen", frozen_arr.view())
+
+
 # Tests for a file with multiple steps
 
 
