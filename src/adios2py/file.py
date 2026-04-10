@@ -176,6 +176,14 @@ class File(Group):
         if data.ndim != 0:
             data = np.ascontiguousarray(data)
 
+        if not data.flags["WRITEABLE"]:
+            # if data isn't writeable, for some reason, DefineVariable throws an unhelpful ValueError that mentions the type of the data (generally np.ndarray).
+            try:
+                data.setflags(write=True)
+            except Exception as exc:
+                msg = "Data needs to be flagged as writeable (even though it won't be modified). Unable to set it to writeable here (possibly because it's a view of an un-writeable array)."
+                raise ValueError(msg) from exc
+
         var = self.io.InquireVariable(name)
         if not var:
             var = self.io.DefineVariable(
